@@ -1,0 +1,190 @@
+html, body {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  background-color: rgba(255, 255, 255, 0);
+  font-size: 6px;
+}
+
+body {
+  background-color: #005E9B;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+header {
+  background-image: linear-gradient(-180deg, #025890 15%, #559DD3 88%, #65B2EB 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.31);
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
+  height: 10rem;
+  position: relative;
+  z-index: 1;
+}
+
+#lego-logo {
+  background-color: #FFFFFF;
+  background-image: url(../images/lego-logo.png);
+  background-position: center;
+  background-size: cover;
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 2px 7px 0 rgba(0,0,0,0.50);
+  height: 12rem;
+  left: 2rem;
+  position: absolute;
+  top: 0;
+  width: 12rem;
+}
+
+#jeep-logo {
+  height: 6rem;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#search-icon {
+  border-radius: 100%;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.47), inset 0 1px 1px 0 rgba(255,255,255,0.32);
+  height: 6rem;
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+#splash {
+  background-attachment: top center;
+  background-image: url(../images/splash.jpg);
+  background-position: center;
+  background-size: cover;
+  height: 60rem;
+  position: relative;
+}
+
+#ready-to-roll {
+  filter: drop-shadow(0 2px 1rem rgba(0,0,0,0.8));
+  left: 4rem;
+  position: absolute;
+  top: 6rem;
+  width: 30rem;
+}
+
+#jeep {
+  top: 10rem;
+  left: 50%;
+  width: 72rem;
+  position: absolute;
+  transform: translate(-50%, 0);
+}
+
+#viewer {
+  box-sizing: border-box;
+  height: 48rem;
+  padding: 0 4rem;
+  text-align: center;
+  width: 100%;
+  position: relative;
+  transition: height 800ms, padding 800ms;
+  z-index: 10;
+}
+
+#viewer.fullscreen {
+  height: 100vh;
+  padding: 0;
+}
+
+#container {
+  border-radius: 1rem;
+  border: 2rem solid white;
+  box-shadow: 0 1rem 6rem 0 rgba(0,0,0,0.2);
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  background-color: #D8D8D8;
+  transition: border-radius 800ms, border 800ms; 
+}
+
+#container.fullscreen {
+  border-radius: 0;
+  border: 0px solid white;
+}
+
+#enterButton {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  background-image: linear-gradient(-180deg, #FAC928 0%, #EE6821 98%);
+  border-radius: 6rem;
+  border: 1px solid #5C5C5C;
+  box-shadow: inset 0 2px 2px 0 rgba(255,255,255,0.70), 0 1rem 1rem 0 rgba(0,0,0,0.15);
+  height: 8rem;
+  position: absolute;
+  width: 64rem;
+  max-width: 80%;
+  transition: bottom 800ms; 
+}
+
+#enterButton:hover {
+  cursor: pointer;
+}
+
+#enterButton.fullscreen {
+  bottom: -4rem;
+}
+
+#enterButton img {
+  filter: drop-shadow(0 2px 0.4rem rgba(0,0,0,0.8));
+  max-height: 3rem;
+  max-width: 90%
+}
+ 
+#exitButton {
+  background-color: rgba(20, 20, 20, 0.4);
+  background-image: url(../images/icon-back.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 40%;
+  border-radius: 100%;
+  bottom: 4rem;
+  height: 10rem;
+  left: 4rem;
+  position: absolute;
+  transition: opacity 800ms, visibility 800ms;
+  width: 10rem;
+  z-index: 1;
+}
+
+#exitButton:hover {
+  cursor: pointer;
+  background-color: rgba(20, 20, 20, 0.6);
+}
+
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.active {
+  border: 4px solid pink;
+  pointer-events: none;
+  cursor: default;
+}
+
+.factoid {
+  font-size: 40rem;
+  background: white;
+  color: black;
+  font-weight: bold;
+  padding: 1rem;
+  border: 0.2rem solid white;
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 1s;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

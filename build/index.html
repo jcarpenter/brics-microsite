@@ -29,278 +29,40 @@
   </script> -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>Micro Home</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.5.3/css/bulma.min.css">
+  <title>Explore BRIC City Vehicles - Jeep</title>
+  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.5.3/css/bulma.min.css"> -->
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700" rel="stylesheet">
-  <style>
-    html {
-      background-color: rgba(255, 255, 255, 0);
-    }
-    body {
-      background-color: white;
-      /*scroll-behavior: smooth;*/
-      overflow-y: scroll;
-      overflow-x: hidden;
-    }
-    /*body {
-      color: white;
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      font-size: 1em;
-      overflow-y: scroll;
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-    }
-    h1 {
-      color: rgba(255, 255, 255, 1);
-      font-weight: 400;
-      text-transform: uppercase;
-      margin: 0;
-      padding: 0;
-      font-size: 1.2rem;
-    }
-    p {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1rem;
-      font-weight: 300;
-      line-height: 1.5em;
-      max-width: 34em;
-    }
-    .block {
-      background-color: #37474f;
-      padding: 2em;
-      width: 100%;
-    }
-    */
-
-    #container {
-      font-size: 10px;
-      position: relative;
-      width: 100%;
-      height: 40rem;
-      overflow: hidden;
-    }
-
-    #enter-ar, #exit-ar {
-      background-color: rgba(0, 0, 0, 0.85);
-      position: absolute;
-      left: 1em;
-      color: white;
-      /*width: 10em;*/
-      padding: 1rem;
-      cursor: pointer;
-      z-index: 2;
-      font-size: 2em;
-      border-radius: 0.1em;
-      bottom: 1em;
-    }
-    #enter-ar:hover, #exit-ar:hover {
-      background-color: blue;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    #backgrounds {
-     top: 1em;
-     left: 1em;
-     list-style: none;
-     padding: 0;
-     margin: 0;
-     position: absolute;
-     top: 1em;
-     left: 1em;
-     z-index: 2;
-    }
-
-    #backgrounds li {
-      background-color: #2196F3;
-      border-radius: 4px;
-      color: white;
-      font-size: 20px;
-      list-style: none;
-      padding: 1em;
-      opacity: 1;
-      text-align: center;
-      transition: opacity 1s;
-      white-space: nowrap;
-      display: inline-block;
-    }
-
-    #backgrounds li:hover{
-      background-color: gray;
-      cursor: pointer;
-    }
-
-    .active {
-      border: 4px solid pink;
-      pointer-events: none;
-      cursor: default;
-    }
-
-    .bg-image {
-      background-position: center center;
-      background-repeat: no-repeat;
-      background-size: cover;
-    }
-
-    .factoid {
-      font-size: 40rem;
-      background: white;
-      color: black;
-      font-weight: bold;
-      padding: 1rem;
-      border: 0.2rem solid white;
-      z-index: 2;
-      opacity: 1;
-      transition: opacity 1s;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-/*    a {
-      color: skyblue
-    }*/
-  </style>
+  <link rel="stylesheet" type="text/css" href="styles/main.css">
 </head>
 <body>
 
-  <div class="factoid" id="css-test">Testing</div>
+  <header>
+    <div id="lego-logo"></div>
+    <img id="jeep-logo" src="images/jeep-logo.png">
+    <img id="search-icon" src="images/search-icon.png">
+  </header>
 
-  <section class="hero is-primary is-medium bg-image" style="background-image: url('images/renders/mono-lake-b-shot1-1.jpg')">
-    <div class="hero-body has-text-centered">
-      <div class="container" style="padding-bottom: 26rem">
-        <h1 class="title">
-          Think big
-        </h1>
-        <h2 class="subtitle">
-          Micro homes for grand ambitions
-        </h2>
-      </div>
-    </div>
-    <div class="hero-head">
-      <nav class="tabs is-fullwidth has-text-centered">
-        <div class="container">
-          <ul>
-            <li><a>Features</a></li>
-            <li><a>Customize</a></li>
-            <li><a>Shipping</a></li>
-            <li><a>Build it</a></li>
-            <li><a>About us</a></li>
-          </ul>
-        </div>
-      </nav>
-    </div>
+  <section id="splash">
+    <img id="ready-to-roll" src="images/ready-to-roll.png">
+    <img id="jeep" src="images/jeep.png">
   </section>
 
-  <section class="hero is-medium">
-    <div class="hero-body has-text-centered">
-      <div class="container">
-        <h1 class="subtitle is-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</h1>
-      </div>
-    </div>
-  </section>
-
-  <section class="section is-paddingless is-marginless">
-    <div class="container is-fluid is-paddingless is-marginless">      
-      <div class="tile is-ancestor is-paddingless is-marginless">
-
-        <div class="tile is-parent is-half is-paddingless">
-          <div class="tile is-child bg-image" style="height: 30rem; background-image: url(images/renders/mono-lake-b-shot2-1.jpg)"></div>
-        </div>
-
-        <div class="tile is-parent is-half is-paddingless">
-          <section class="tile is-child hero is-info">
-            <div class="hero-body is-flex" style="align-items: center">
-              <div class="container is-fluid" style="align-items: center">
-                <h1 class="title">
-                  Hero title
-                </h1>
-                <h2 class="subtitle">
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                </h2>
-              </div>
-            </div>
-          </section>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-
- <section class="section is-paddingless is-marginless">
-    <div class="container is-fluid is-paddingless is-marginless">      
-      <div class="tile is-ancestor is-paddingless is-marginless">
-
-        <div class="tile is-parent is-half is-paddingless">
-          <section class="tile is-child hero is-info">
-            <div class="hero-body is-flex" style="align-items: center">
-              <div class="container is-fluid" style="align-items: center">
-                <h1 class="title">
-                  Hero title
-                </h1>
-                <h2 class="subtitle">
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                </h2>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div class="tile is-parent is-half is-paddingless">
-          <div class="tile is-child bg-image" style="height: 30rem; background-image: url(images/renders/mono-lake-b-shot2-1.jpg)"></div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <section class="hero is-medium">
-    <div class="hero-body has-text-centered">
-      <div class="container">
-        <h1 class="subtitle is-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</h1>
-      </div>
-    </div>
-  </section>
-
-  <section class="section hero is-paddingless is-marginless" style="background-color: rgba(255, 255, 255, 0)">
+  <section id="viewer">
     <div id="container">
-      <div id="enter-ar">ENTER AR</div>
-      <div id="exit-ar" class="hidden">EXIT AR</div>
-      <ul id="backgrounds">
-        <li id="background-1">Mountains</li>
-        <li id="background-2">Gray</li>
-        <li id="background-3">AR</li>
-      </ul>
+      <div id="exitButton" class="hidden"></div>
     </div>
-  </section>
-
-  <section class="hero is-medium">
-    <div class="hero-body has-text-centered">
-      <div class="container">
-        <h1 class="subtitle is-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</h1>
-      </div>
-    </div>
+    <button id="enterButton">
+      <img src="images/build-at-home.png">
+    </button>
   </section>
 
   <footer class="footer">
-    <div class="container">
-      <div class="content has-text-centered">
-        <p>
-          <strong>Bulma</strong> by <a href="http://jgthms.com">Jeremy Thomas</a>. The source code is licensed
-          <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
-          is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
-        </p>
-        <p>
-          <a class="icon" href="https://github.com/jgthms/bulma">
-            <i class="fa fa-github"></i>
-          </a>
-        </p>
-      </div>
-    </div>
+    <p>
+      <strong>Bulma</strong> by <a href="http://jgthms.com">Jeremy Thomas</a>. The source code is licensed
+      <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
+      is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
+    </p>
   </footer>
 
   <script src="js/third_party/Tween.js"></script>
