@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -70,21 +70,7 @@
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var EventEmitter = __webpack_require__(5).EventEmitter;
-
-exports.default = new EventEmitter();
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _app = __webpack_require__(2);
+var _app = __webpack_require__(1);
 
 var _app2 = _interopRequireDefault(_app);
 
@@ -99,48 +85,36 @@ window.onload = function () {
 };
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+
+// import Config from './config';
+// import DesktopFallback from './desktopFallback';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+// import RendererCSS from './rendererCSS';
 // import Inputs from './inputs';
 // import DomWrapper from './domWrapper';
-
+// import Environments from './environments';
 // import { getCameraPosition, getCameraOrientation } from './utilities';
 
 
-var _config = __webpack_require__(3);
-
-var _config2 = _interopRequireDefault(_config);
-
-var _desktopFallback = __webpack_require__(4);
-
-var _desktopFallback2 = _interopRequireDefault(_desktopFallback);
-
-var _bus = __webpack_require__(0);
+var _bus = __webpack_require__(2);
 
 var _bus2 = _interopRequireDefault(_bus);
 
-var _rendererGL = __webpack_require__(6);
+var _rendererGL = __webpack_require__(4);
 
 var _rendererGL2 = _interopRequireDefault(_rendererGL);
 
-var _rendererCSS = __webpack_require__(7);
-
-var _rendererCSS2 = _interopRequireDefault(_rendererCSS);
-
-var _environments = __webpack_require__(8);
-
-var _environments2 = _interopRequireDefault(_environments);
-
-var _zenscroll = __webpack_require__(12);
+var _zenscroll = __webpack_require__(5);
 
 var _zenscroll2 = _interopRequireDefault(_zenscroll);
 
@@ -154,137 +128,190 @@ var App = function () {
 
     _classCallCheck(this, App);
 
-    // Instantiate vr variables
-    this.vrDisplay;
-    this.vrFrameData;
-    this.vrControls;
-    this.orbitControls;
-    this.arView;
     this.activeCamera;
     this.arCamera;
+    this.arView;
+    this.container;
+    // this.cssCamera;
+    this.currentMode;
+    this.deviceType;
+    this.viewer;
+    this.orbitControls;
+    this.PERSP_CAMERA_ISO_FOV = 15;
+    this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
     this.perspCamera;
-    this.cssCamera;
     this.render = this.render.bind(this);
     this.scrollOffset;
     this.scrollTarget;
-
-    this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
-    // this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 0.05, -1);
-    this.PERSP_CAMERA_ISO_FOV = 15;
-
-    // Create container elements
-    this.container = document.querySelector("#container");
-
-    // Setup scene and renderers
-    this.scene = new THREE.Scene();
-    this.rendererGL = new _rendererGL2.default(this.container);
-    this.rendererCSS = new _rendererCSS2.default(this.container);
-
-    this.cssRoot = new THREE.Object3D();
-    this.cssRoot.scale.set(0.001, 0.001, 0.001);
-    this.scene.add(this.cssRoot);
-
-    this.cssTest = new THREE.CSS3DObject(document.querySelector("#css-test"));
-    // this.logo.scale.set(0.001, 0.001, 0.001);
-    this.cssTest.position.set(0, 0, 0);
-    this.cssRoot.add(this.cssTest);
+    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.viewerOffsetFromTop;
+    this.viewerPlaceholder;
+    this.vrControls;
+    this.vrDisplay;
+    this.vrFrameData;
 
     // Check for AR displays
     THREE.ARUtils.getARDisplay().then(function (display) {
-      return _this.onGetARDisplays(display);
+      _this.vrDisplay = display;
+      _this.init();
     });
   }
 
-  /**
-   * Executed when getARDiplays returns. Creates cameras
-   * and calls `init()`
-   */
-
-
   _createClass(App, [{
-    key: 'onGetARDisplays',
-    value: function onGetARDisplays(display) {
-      if (display) {
-
-        // If device is AR compatible, do the following:
-
-        this.vrFrameData = new VRFrameData();
-        this.vrDisplay = display;
-
-        this.arCamera = new THREE.ARPerspectiveCamera(this.vrDisplay, 60, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
-
-        this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
-        // this.cssCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
-
-        this.vrControls = new THREE.VRControls(this.arCamera);
-        this.arView = new THREE.ARView(this.vrDisplay, this.rendererGL.renderer);
-
-        // Turn on the debugging panel
-        var arDebug = new THREE.ARDebug(this.vrDisplay, this.scene, { showPlanes: false });
-        this.container.appendChild(arDebug.getElement());
-
-        // Create and add reticle
-        this.reticle = new ARPrimitives.ARSpotlight(this.vrDisplay);
-        this.scene.add(this.reticle);
-
-        this.init();
-      } else {
-
-        // Else if device is not AR compatible, do the following:
-
-        // THREE.ARUtils.displayUnsupportedMessage();
-
-        // Setup cameras
-        this.arCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, 0.1, 100);
-
-        this.arCamera.name = "arCamera";
-        this.perspCamera.name = "perspCamera";
-
-        // Hide Enter AR button
-        document.querySelector("#enter-ar").style.display = "none";
-
-        // if (Config.DESKTOP_FALLBACK) this.desktopFallback = new DesktopFallback(this.scene, this.arCamera);
-        // this.desktopFallback.animateCameraSideToSide();
-
-        this.init();
-      }
-    }
-  }, {
-    key: 'getCameraFov',
-    value: function getCameraFov(cam) {
-      if (this.vrDisplay) {
-
-        // From the WebVR API, populate `vrFrameData` with
-        // updated information for the frame; only call this here when we
-        // need it as we only call this function when triggering transitions,
-        // rather than calling `getFrameData` on every frame
-        this.vrDisplay.getFrameData(this.vrFrameData);
-
-        // Magic math extracts three.js-compatible FOV from device camera projection matrix.
-        // Adapted from http://answers.unity3d.com/questions/770838/how-can-i-extract-the-fov-information-from-the-pro.html
-        var projMat = this.vrFrameData.leftProjectionMatrix[5];
-        var fov = Math.atan(1.0 / projMat) * 2.0 * THREE.Math.RAD2DEG;
-        return fov;
-      } else {
-        return cam.fov;
-      }
-    }
-  }, {
     key: 'init',
     value: function init() {
+
+      this.currentMode = 'default';
+      this.createScene();
+
+      if (this.isARDevice()) {
+        this.setDeviceType("ar");
+        this.createArCameras();
+        // this.showElement(document.querySelector("#enter-ar"));
+      } else if (this.isMobileDevice()) {
+        this.setDeviceType("mobile");
+        this.createMobileCamera();
+        // this.hideElement(document.querySelector("#enter-ar"));
+      } else {
+        this.setDeviceType("desktop");
+        this.createDesktopCamera();
+        // this.hideElement(document.querySelector("#enter-ar"));
+      }
+
+      this.createModel();
+      this.createLights();
+      // this.createEnvironments();
+      this.setActiveCamera(this.perspCamera);
+      this.render();
+    }
+  }, {
+    key: 'createScene',
+    value: function createScene() {
       var _this2 = this;
 
-      this.currentMode = '2D';
+      // Create container elements
+      this.container = document.querySelector("#container");
+      this.viewer = document.querySelector("#viewer");
 
-      // Setup default, non-AR camera
-      this.perspCamera.position.set(24, 24, 24);
+      // Setup scene and renderers
+      this.scene = new THREE.Scene();
+      this.rendererGL = new _rendererGL2.default(this.container);
+      // this.rendererCSS = new RendererCSS(this.container);
+
+      // Set `pointer-events` to none so we can appropriately receive events.
+      this.rendererGL.renderer.domElement.style.pointerEvents = 'auto';
+      // this.rendererCSS.renderer.domElement.style.pointerEvents = 'none';
+      this.rendererGL.renderer.domElement.addEventListener('touchstart', function () {
+        return _this2.onCanvasClick();
+      }, true);
+
+      // Create scene root group
+      // this.group = new THREE.Group();
+      // this.scene.add(this.group);
+
+      // Setup CSS root element
+      // this.cssRoot = new THREE.Object3D();
+      // this.cssRoot.scale.set(0.001, 0.001, 0.001); 
+      // this.scene.add(this.cssRoot);
+
+      // this.cssTest = new THREE.CSS3DObject(document.querySelector("#css-test"));
+      // this.logo.scale.set(0.001, 0.001, 0.001);
+      // this.cssTest.position.set(0, 0, 0);
+      // this.cssRoot.add(this.cssTest)
+
+      // Setup buttons
+
+      this.enterButton = document.querySelector('#enterButton');
+      this.enterButton.addEventListener('click', function () {
+        return _this2.enter();
+      });
+
+      this.exitButton = document.querySelector('#exitButton');
+      this.exitButton.addEventListener('click', function () {
+        return _this2.exit();
+      });
+
+      // window.addEventListener('resize', e => this.onWindowResize(e), false);
+      document.addEventListener('touchmove', function (e) {
+        return _this2.onTouchMove(e);
+      }, { passive: false });
+      // bus.on('enterAR', () => this.enterAR());
+      // bus.on('exitAR', () => this.exit());
+    }
+  }, {
+    key: 'setDeviceType',
+    value: function setDeviceType(type) {
+      this.deviceType = type;
+      console.log(this.deviceType);
+    }
+  }, {
+    key: 'isARDevice',
+    value: function isARDevice() {
+      if (this.vrDisplay) return true;
+    }
+  }, {
+    key: 'isMobileDevice',
+    value: function isMobileDevice() {
+      // Taken from https://coderwall.com/p/i817wa/one-line-function-to-detect-mobile-devices-with-javascript
+      return typeof window.orientation !== "undefined" || navigator.userAgent.indexOf('IEMobile') !== -1;
+    }
+  }, {
+    key: 'hideElement',
+    value: function hideElement(element) {
+      element.classList.add("hidden");
+    }
+  }, {
+    key: 'showElement',
+    value: function showElement(element) {
+      element.classList.remove("hidden");
+    }
+  }, {
+    key: 'createArCameras',
+    value: function createArCameras() {
+
+      this.vrFrameData = new VRFrameData();
+
+      this.arCamera = new THREE.ARPerspectiveCamera(this.vrDisplay, 60, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
+
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
+      // this.cssCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
+
+      this.vrControls = new THREE.VRControls(this.arCamera);
+      this.arView = new THREE.ARView(this.vrDisplay, this.rendererGL.renderer);
+
+      // Turn on the debugging panel
+      // let arDebug = new THREE.ARDebug(this.vrDisplay, this.scene, { showPlanes: false });
+      // this.container.appendChild(arDebug.getElement());
+
+      // Create and add reticle
+      this.reticle = new ARPrimitives.ARSpotlight(this.vrDisplay);
+      this.scene.add(this.reticle);
+    }
+  }, {
+    key: 'createMobileCamera',
+    value: function createMobileCamera() {
+      var _this3 = this;
+
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, 0.1, 100);
+      this.perspCamera.position.set(36, 36, 36);
       this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
 
-      // Setup orbit controls
+      window.addEventListener('resize', function () {
+        _this3.perspCamera.aspect = window.innerWidth / window.innerHeight;
+        _this3.perspCamera.updateProjectionMatrix();
+      });
+    }
+  }, {
+    key: 'createDesktopCamera',
+    value: function createDesktopCamera() {
+      var _this4 = this;
+
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, 0.1, 100);
+      this.perspCamera.position.set(36, 36, 36);
       this.orbitControls = new THREE.OrbitControls(this.perspCamera, this.rendererGL.renderer.domElement);
-      // this.orbitControls.addEventListener( 'change', this.render() ); // remove when using animation loop
-      // enable animation loop when using damping or autorotation
+      // Enable animation loop when using damping or autorotation
+      this.orbitControls.autoRotate = true;
+      this.orbitControls.autoRotateSpeed = 2.0;
       // this.orbitControls.enableDamping = true;
       // this.orbitControls.dampingFactor = 0.25;
       this.orbitControls.target = this.PERSP_CAMERA_ISO_TARGET;
@@ -293,58 +320,24 @@ var App = function () {
       // this.orbitControls.maxDistance = 36;
       this.orbitControls.minPolarAngle = 0; // radians
       this.orbitControls.maxPolarAngle = Math.PI / 2; // radians
+      this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
+      this.container.style.cursor = '-webkit-grab';
 
-      // Setup event listeners
-      window.addEventListener('resize', function (e) {
-        return _this2.onWindowResize(e);
-      }, false);
-      document.addEventListener('touchmove', function (e) {
-        return _this2.onTouchMove(e);
-      }, { passive: false });
-      _bus2.default.on('enterAR', function () {
-        return _this2.onAREnter();
+      window.addEventListener('resize', function () {
+        _this4.perspCamera.aspect = window.innerWidth / window.innerHeight;
+        _this4.perspCamera.updateProjectionMatrix();
       });
-      _bus2.default.on('exitAR', function () {
-        return _this2.onARExit();
-      });
-      _bus2.default.on('pageLoad', function () {
-        return _this2.onPageLoad();
-      });
+    }
+  }, {
+    key: 'createModel',
+    value: function createModel() {
 
-      // Setup buttons
-      this.enterAr = document.querySelector('#enter-ar');
-      this.enterAr.addEventListener('click', function () {
-        return _bus2.default.emit('enterAR');
-      });
-
-      this.exitAr = document.querySelector('#exit-ar');
-      this.exitAr.addEventListener('click', function () {
-        return _bus2.default.emit('exitAR');
-      });
-
-      // Be sure to remove the `pointer-events` css property so
-      // we can appropriately receive events.
-      this.rendererGL.renderer.domElement.style.pointerEvents = null;
-      this.rendererCSS.renderer.domElement.style.pointerEvents = 'none';
-      this.rendererGL.renderer.domElement.addEventListener('touchstart', function () {
-        return _this2.onCanvasClick();
-      }, true);
-
-      /**
-       * Setup scene elements
-      */
-
-      // Create scene root
-      this.group = new THREE.Group();
-      // this.group.position.set(0, 0, 0);
-      // this.group.rotation.set(0, 45 * THREE.Math.DEG2RAD, 0);
-      this.scene.add(this.group);
-
-      // Setup home model
       this.model;
       this.loadingManager = new THREE.LoadingManager();
       this.loader = new THREE.ColladaLoader(this.loadingManager);
-      this.loader.load('models/home/home-lowResPlaceholder-1.dae', function (collada) {
+      this.loader.load('models/jeep.dae', function (collada) {
+
+        this.createGrid();
 
         // Set all materials to DoubleSide, to compensate for flipped normals in the original model
         collada.scene.traverse(function (node) {
@@ -354,60 +347,31 @@ var App = function () {
         });
 
         this.model = collada.scene;
-        this.group.add(this.model);
+        this.scene.add(this.model);
 
         // Fire pageLoad once model is ready
         _bus2.default.emit('pageLoad');
       }.bind(this));
-
-      // Setup lighting
-      this.light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
-      this.scene.add(this.light);
-
-      // Create environments
-      this.environments = new _environments2.default(this.scene);
-
-      // Set active camera and start render loop
-      this.setActiveCamera(this.perspCamera);
-      this.render();
-
-      // // Instantiate a loader
-      // this.loader = new THREE.GLTF2Loader();
-
-      // // Load a glTF resource
-      // this.loader.load( 'models/furniture/untitled.glb', function ( gltf ) {
-
-      //   this.scene.add( gltf.scene );
-      //   console.log(gltf.scene);
-      //   // gltf.scene.scale.set(11, 11, 11);
-      //   gltf.scene.position.set(1, 1, 1);
-
-      //   // gltf.animations; // Array&lt;THREE.AnimationClip&gt;
-      //   gltf.scene;      // THREE.Scene
-      //   gltf.scenes;     // Array&lt;THREE.Scene&gt;
-      //   // gltf.cameras;    // Array&lt;THREE.Camera&gt;
-      //   bus.emit('enterAR');
-      //   bus.emit('pageLoad');
-
-      // }.bind(this) );
-
-      // Setup grid (optional helper)
-      // const GRID_SIZE = 6;
-      // const GRID_DIVISIONS = 12;
-      // const MEDIUM = 0x999999;
-      // if (!this.vrDisplay) {
-      //   // Only create grid if on desktop
-      //   this.grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, MEDIUM, MEDIUM);
-      //   this.group.add(this.grid);
-      // }
     }
   }, {
-    key: 'hideModel',
-    value: function hideModel() {
-      // new TWEEN.Tween(this.model.material)
-      //   .to({ opacity: 0 }, 1000)
-      //   .start();
-      this.model.visible = false;
+    key: 'createLights',
+    value: function createLights() {
+      this.light = new THREE.HemisphereLight(0xF5F5F5, 0x1F1F1F, 1);
+      this.scene.add(this.light);
+    }
+  }, {
+    key: 'createGrid',
+    value: function createGrid() {
+      var GRID_SIZE = 5;
+      var GRID_DIVISIONS = 10;
+      var MEDIUM = 0xBABABA;
+      this.grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, MEDIUM, MEDIUM);
+      this.scene.add(this.grid);
+    }
+  }, {
+    key: 'createEnvironments',
+    value: function createEnvironments() {
+      this.environments = new Environments(this.scene);
     }
   }, {
     key: 'showModel',
@@ -418,78 +382,168 @@ var App = function () {
       this.model.visible = true;
     }
   }, {
-    key: 'animatePerspCameraPosition',
-    value: function animatePerspCameraPosition(pos, target, onComplete) {
-      var _this3 = this;
-
-      new TWEEN.Tween(this.perspCamera.position).to(pos, 1000).onUpdate(function () {
-        return target && _this3.perspCamera.lookAt(target);
-      }).onComplete(function () {
-        if (typeof onComplete === 'function') onComplete();
-      }).easing(TWEEN.Easing.Quadratic.InOut).start();
+    key: 'hideModel',
+    value: function hideModel() {
+      // new TWEEN.Tween(this.model.material)
+      //   .to({ opacity: 0 }, 1000)
+      //   .start();
+      this.model.visible = false;
     }
   }, {
-    key: 'animatePerspCameraRotation',
-    value: function animatePerspCameraRotation(quat) {
-      new TWEEN.Tween(this.perspCamera.quaternion).to(quat, 1000).easing(TWEEN.Easing.Quadratic.InOut).start();
+    key: 'setActiveCamera',
+    value: function setActiveCamera(cam) {
+      this.activeCamera = cam;
     }
   }, {
-    key: 'animatePerspCameraFov',
-    value: function animatePerspCameraFov(fov) {
-      var _this4 = this;
-
-      new TWEEN.Tween(this.perspCamera).to({ fov: fov }, 1000).onUpdate(function () {
-        return _this4.perspCamera.updateProjectionMatrix();
-      }).easing(TWEEN.Easing.Quadratic.InOut).start();
-    }
-
-    // onMagicWindowStart() {
-    //   this.currentMode = 'MagicWindow';
-
-    //   this.hideBackground();
-    //   this.showPano();
-    //   this.hideModel();
-    //   this.scene.remove(this.reticle);
-
-    //   // If going from 2D -> MagicWindow, animate the perspective
-    //   // camera to match and switch to the AR Camera
-    //   if (this.activeCamera === this.perspCamera) {
-    //     this.animatePerspCameraPosition(this.arCamera.position,
-    //                                     null,
-    //                                     () => this.setActiveCamera(this.arCamera));
-    //     this.animatePerspCameraRotation(this.arCamera.quaternion);
-    //     this.animatePerspCameraFov(this.getCameraFov(this.arCamera));
-    //   }
-    // }
-
-  }, {
-    key: 'noscroll',
-    value: function noscroll() {
-      window.scrollTo(0, this.scrollTarget);
+    key: 'enter',
+    value: function enter() {
+      if (this.deviceType === 'ar') {
+        this.enterAR();
+      } else if (this.deviceType === 'mobile' || this.deviceType === 'desktop') {
+        this.enterFullscreen();
+      }
     }
   }, {
-    key: 'onPageLoad',
-    value: function onPageLoad() {
+    key: 'exit',
+    value: function exit() {
+      if (this.currentMode === 'ar') {
+        this.exitAR();
+      } else if (this.currentMode === 'fullscreen') {
+        this.exitFullscreen();
+      }
+    }
+  }, {
+    key: 'enterFullscreen',
+    value: function enterFullscreen() {
+
+      this.exitButton.classList.remove("hidden");
+      this.currentMode = 'fullscreen';
+
+      // We store this for later
+      this.viewerOffsetFromTop = this.viewer.getBoundingClientRect().top + window.scrollY;
+
+      // Create placeholder element. This will keep page from reflowing when we "pop out" the viewer by setting it's position to absolute
+      this.viewerPlaceholder = document.createElement('div');
+      this.viewerPlaceholder.id = 'placeholder';
+      this.viewerPlaceholder.style.width = window.getComputedStyle(this.viewer).getPropertyValue('width');
+      this.viewerPlaceholder.style.height = window.getComputedStyle(this.viewer).getPropertyValue('height');
+      this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
+      this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
+      this.viewer.parentElement.insertBefore(this.viewerPlaceholder, this.viewer);
+
+      // Prevent page scrolling by setting overflow and hidden values on documentElement
+      document.documentElement.style.overflowY = 'hidden';
+      document.documentElement.style.height = '100vh';
+
+      // Setting these three values "pops" the viewer out of the page flow without the user noticing.
+      // The key is setting "top" value to equal the viewer's Y position relative to viewport top, then setting position absolute.
+      this.viewer.style.position = 'absolute';
+
+      var transition = this.viewer.animate([{ top: String(this.viewerOffsetFromTop + 'px') }, { top: String(window.scrollY + 'px') }], {
+        duration: this.ENTER_EXIT_TRANSITION_DURATION,
+        easing: 'ease'
+      });
+
+      transition.addEventListener('finish', function () {
+        this.viewer.style.top = String(window.scrollY + 'px');
+      }.bind(this));
+
+      // The following classes animate the viewport and other elements into position
+      this.viewer.classList.add('fullscreen');
+      this.container.classList.add('fullscreen');
+      this.enterButton.classList.add('fullscreen');
+    }
+  }, {
+    key: 'exitFullscreen',
+    value: function exitFullscreen() {
+
+      this.exitButton.classList.add("hidden");
+      this.currentMode = 'fullscreen';
+
+      // Prevent page scrolling by setting overflow and hidden values on documentElement
+      // document.documentElement.style.overflowY = 'scroll';
+      // document.documentElement.style.height = 'auto';
+      document.documentElement.removeAttribute('style');
+
+      var viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
+
+      // The following classes animate the viewport and other elements into position
+      this.viewer.classList.remove('fullscreen');
+      this.container.classList.remove('fullscreen');
+      this.enterButton.classList.remove('fullscreen');
+
+      var transition = this.viewer.animate([{ top: viewerCurrentPosition }, { top: String(this.viewerOffsetFromTop + 'px') }], {
+        duration: this.ENTER_EXIT_TRANSITION_DURATION,
+        easing: 'ease'
+      });
+
+      transition.addEventListener('finish', function () {
+        this.viewerPlaceholder.remove();
+        this.viewer.style.position = 'relative';
+        this.viewer.style.top = 0;
+        // this.viewer.removeAttribute('style');
+      }.bind(this));
+    }
+  }, {
+    key: 'enterAR',
+    value: function enterAR() {
+
+      this.exitButton.classList.remove("hidden");
+      this.currentMode = 'ar';
+
+      // We store this for later
+      this.viewerOffsetFromTop = this.viewer.getBoundingClientRect().top + window.scrollY;
+
+      // Create placeholder element. This will keep page from reflowing when we "pop out" the viewer by setting it's position to absolute
+      this.viewerPlaceholder = document.createElement('div');
+      this.viewerPlaceholder.id = 'placeholder';
+      this.viewerPlaceholder.style.width = window.getComputedStyle(this.viewer).getPropertyValue('width');
+      this.viewerPlaceholder.style.height = window.getComputedStyle(this.viewer).getPropertyValue('height');
+      this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
+      this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
+      this.viewer.parentElement.insertBefore(this.viewerPlaceholder, this.viewer);
+
+      // Prevent page scrolling by setting overflow and hidden values on documentElement
+      document.documentElement.style.overflowY = 'hidden';
+      document.documentElement.style.height = '100vh';
+
+      // Setting these three values "pops" the viewer out of the page flow without the user noticing.
+      // The key is setting "top" value to equal the viewer's Y position relative to viewport top, then setting position absolute.
+      this.viewer.style.position = 'absolute';
+
+      var transition = this.viewer.animate([{ top: String(this.viewerOffsetFromTop + 'px') }, { top: String(window.scrollY + 'px') }], {
+        duration: this.ENTER_EXIT_TRANSITION_DURATION,
+        easing: 'ease'
+      });
+
+      transition.addEventListener('finish', function () {
+        this.viewer.style.top = String(window.scrollY + 'px');
+      }.bind(this));
+
+      // The following classes animate the viewport and other elements into position
+      this.viewer.classList.add('fullscreen');
+      this.container.classList.add('fullscreen');
+      this.enterButton.classList.add('fullscreen');
+
+      // this.hideModel();
+      // this.scene.add(this.reticle);
+      // this.setActiveCamera(this.arCamera);
+    }
+  }, {
+    key: 'exitAR',
+    value: function exitAR() {
+
       this.enterAr.classList.remove("hidden");
-      this.exitAr.classList.add("hidden");
-      this.currentMode = '2D';
-    }
-  }, {
-    key: 'onARExit',
-    value: function onARExit() {
-
-      this.enterAr.classList.remove("hidden");
-      this.exitAr.classList.add("hidden");
-      this.currentMode = '2D';
+      this.exitButton.classList.add("hidden");
+      this.currentMode = 'default';
 
       // Update container styles and scroll position
       this.container.style.height = '40rem';
       this.container.style.position = 'relative';
 
       // Enable scrolling. This will snap the scroll to the top of the page.
-      document.body.style.overflow = 'scroll';
-      document.body.style.height = 'auto';
-
+      document.documentElement.style.overflow = 'scroll';
+      document.documentElement.style.height = 'auto';
       document.body.style.backgroundColor = 'white';
 
       // Setting overflow and height values snaps the scroll position to the top of the page, so we need to set the window scroll back to the top of the container.
@@ -529,161 +583,18 @@ var App = function () {
       //   .start();
     }
   }, {
-    key: 'onAREnter',
-    value: function onAREnter() {
-      var _this5 = this;
-
-      this.enterAr.classList.add("hidden");
-      this.exitAr.classList.remove("hidden");
-
-      // Update mode
-      this.currentMode = 'AR';
-
-      // Update container styles and scroll position
-      this.container.style.transition = 'height 500ms, top 500ms ';
-      this.container.style.height = '100vh';
-
-      // Store window scrollY offset, so we can scroll back to it once the user exits AR mode.
-      this.scrollOffset = window.scrollY;
-
-      // Scroll view so that top of container is flush with top of screen
-      this.scrollTarget = this.container.getBoundingClientRect().top + window.scrollY;
-      _zenscroll2.default.toY(this.scrollTarget, 500, function () {
-
-        // Disable scrolling once scroll animation has finished
-        document.body.style.overflow = 'hidden';
-        document.body.style.height = '100vh';
-
-        // Set the background color to transparent
-        document.body.style.backgroundColor = 'rgba(255, 255, 255, 0)';
-
-        // Setting overflow and height values snaps the scroll position to the top of the page, so we need to set the body scroll back to the top of the container.
-        document.body.scrollTop = _this5.scrollTarget;
-
-        // document.body.style.userSelect = 'none';
-        // document.body.style.webkitUserSelect = 'none';
-
-        _this5.hideModel();
-        _this5.scene.add(_this5.reticle);
-        _this5.setActiveCamera(_this5.arCamera);
-      });
-    }
-
-    // onARStart_OLD() {
-    //   // Update container styles and scroll position
-    //   this.container.style.transition = 'height 1000ms, top 1000ms '
-    //   this.container.style.height = '100vh';
-
-    //   // Store window scrollY offset, so we can scroll back to it once the user exits AR mode.
-    //   this.scrollOffset = window.scrollY;
-
-    //   // Scroll view so that top of container is flush with top of screen
-    //   let scrollTarget = this.container.getBoundingClientRect().top + window.scrollY;
-    //   zenscroll.toY(scrollTarget, 1000, () => {
-    //     // Disable scrolling once scroll animation has finished
-    //     document.body.style.overflow = 'hidden';
-    //     // document.body.style.position = 'fixed';
-    //     document.body.style.width = '100%';
-    //     document.body.style.height = '100vh';
-    //     document.body.style.userSelect = 'none';
-    //     // document.body.style.webkitUserSelect = 'none';
-    //   });
-
-    //   this.hideModel();
-    //   // this.hidePano();
-    //   // this.hideBackground();
-    //   this.scene.add(this.reticle);
-
-    //   if (this.activeCamera === this.perspCamera) {
-    //     this.animatePerspCameraPosition(this.arCamera.position,
-    //                                     this.PERSP_CAMERA_ISO_TARGET,
-    //                                     () => this.setActiveCamera(this.arCamera));
-    //     this.animatePerspCameraFov(this.getCameraFov(this.arCamera));
-    //   }
-    // }
-
-  }, {
-    key: 'toggleMode',
-    value: function toggleMode() {
-      if (this.currentMode !== '2D') {
-        this.currentMode = '2D';
-        _bus2.default.emit('enterAR');
-      } else if (this.currentMode !== 'AR') {
-        this.currentMode = 'AR';
-        _bus2.default.emit('exitAR');
-      }
-    }
-
-    // Embedded ////////////////
-
-  }, {
-    key: 'setActiveCamera',
-    value: function setActiveCamera(cam) {
-      this.activeCamera = cam;
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-
-      if (this.vrDisplay) {
-
-        // If device is AR-compatible (aka: if vrDisplay was populated), do the following:
-        this.arView.render();
-
-        if (this.currentMode === 'AR') {
-          this.reticle.update();
-        }
-        // Update our perspective camera's positioning
-        this.vrControls.update();
-
-        // Update our camera projection matrix in the event that
-        // the near or far planes have updated
-        this.arCamera.updateProjectionMatrix();
-        this.perspCamera.updateProjectionMatrix();
-        // this.cssCamera.updateProjectionMatrix();
-
-        // Render our three.js virtual scene
-        this.rendererGL.renderer.clearDepth();
-      }
-
-      // this.orbitControls.update();
-
-      TWEEN.update();
-      this.arCamera.updateMatrix();
-      this.perspCamera.updateMatrix();
-      this.rendererGL.render(this.scene, this.activeCamera);
-      this.rendererCSS.render(this.scene, this.activeCamera);
-      requestAnimationFrame(this.render);
-    }
-  }, {
     key: 'onCanvasClick',
     value: function onCanvasClick() {
       if (this.vrDisplay && this.vrDisplay.hitTest && this.currentMode === 'AR') {
         var hits = this.vrDisplay.hitTest(0.5, 0.5);
         if (hits && hits.length) {
           var hit = hits[0];
-          THREE.ARUtils.placeObjectAtHit(this.group, hit, true, 1);
+          THREE.ARUtils.placeObjectAtHit(this.scene, hit, true, 1);
           // Show model immediately if not already present
           // this.model.material.opacity = 1;
           this.showModel();
         }
       }
-    }
-
-    /**
-     * Called on window resize.
-     */
-
-  }, {
-    key: 'onWindowResize',
-    value: function onWindowResize() {
-      // Update camera aspect
-      this.arCamera.aspect = window.innerWidth / window.innerHeight;
-      this.perspCamera.aspect = window.innerWidth / window.innerHeight;
-
-      // Update camera project matrix
-      this.arCamera.updateProjectionMatrix();
-      this.perspCamera.updateProjectionMatrix();
     }
   }, {
     key: 'onTouchMove',
@@ -692,6 +603,95 @@ var App = function () {
         e.preventDefault();
       }
     }
+  }, {
+    key: 'render',
+    value: function render() {
+
+      TWEEN.update();
+
+      if (this.deviceType == 'ar') {
+
+        if (this.currentMode == 'ar') {
+          this.arView.render();
+          this.reticle.update();
+          this.vrControls.update(); // Updates perspective camera's positioning
+        }
+
+        // Update camera projection matrix in case near/far planes have changed
+        this.arCamera.updateProjectionMatrix();
+        // this.perspCamera.updateProjectionMatrix();
+        // this.cssCamera.updateProjectionMatrix();
+        this.arCamera.updateMatrix();
+        this.rendererGL.renderer.clearDepth();
+      } else if (this.deviceType == 'mobile') {} else if (this.deviceType == 'desktop') {
+        this.orbitControls.update();
+      }
+
+      this.perspCamera.updateMatrix();
+      this.rendererGL.render(this.scene, this.activeCamera);
+      // this.rendererCSS.render(this.scene, this.activeCamera);
+      requestAnimationFrame(this.render);
+    }
+
+    /*======== OLD ========= */
+
+  }, {
+    key: 'getCameraFov',
+    value: function getCameraFov(cam) {
+      if (this.vrDisplay) {
+
+        // From the WebVR API, populate `vrFrameData` with
+        // updated information for the frame; only call this here when we
+        // need it as we only call this function when triggering transitions,
+        // rather than calling `getFrameData` on every frame
+        this.vrDisplay.getFrameData(this.vrFrameData);
+
+        // Magic math extracts three.js-compatible FOV from device camera projection matrix.
+        // Adapted from http://answers.unity3d.com/questions/770838/how-can-i-extract-the-fov-information-from-the-pro.html
+        var projMat = this.vrFrameData.leftProjectionMatrix[5];
+        var fov = Math.atan(1.0 / projMat) * 2.0 * THREE.Math.RAD2DEG;
+        return fov;
+      } else {
+        return cam.fov;
+      }
+    }
+  }, {
+    key: 'animatePerspCameraPosition',
+    value: function animatePerspCameraPosition(pos, target, onComplete) {
+      var _this5 = this;
+
+      new TWEEN.Tween(this.perspCamera.position).to(pos, 1000).onUpdate(function () {
+        return target && _this5.perspCamera.lookAt(target);
+      }).onComplete(function () {
+        if (typeof onComplete === 'function') onComplete();
+      }).easing(TWEEN.Easing.Quadratic.InOut).start();
+    }
+  }, {
+    key: 'animatePerspCameraRotation',
+    value: function animatePerspCameraRotation(quat) {
+      new TWEEN.Tween(this.perspCamera.quaternion).to(quat, 1000).easing(TWEEN.Easing.Quadratic.InOut).start();
+    }
+  }, {
+    key: 'animatePerspCameraFov',
+    value: function animatePerspCameraFov(fov) {
+      var _this6 = this;
+
+      new TWEEN.Tween(this.perspCamera).to({ fov: fov }, 1000).onUpdate(function () {
+        return _this6.perspCamera.updateProjectionMatrix();
+      }).easing(TWEEN.Easing.Quadratic.InOut).start();
+    }
+
+    // toggleMode() {
+    //   if (this.currentMode !== '2D') {
+    //     this.currentMode = '2D';
+    //     bus.emit('enterAR');
+    //   } else if (this.currentMode !== 'AR') {
+    //     this.currentMode = 'AR';
+    //     bus.emit('exitAR');
+    //   }
+    // }
+
+
   }]);
 
   return App;
@@ -700,148 +700,21 @@ var App = function () {
 exports.default = App;
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var EventEmitter = __webpack_require__(3).EventEmitter;
+
+exports.default = new EventEmitter();
+
+/***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  DESKTOP_FALLBACK: true,
-  EMBEDDED: true
-};
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var DesktopFallback = function () {
-  function DesktopFallback(scene, camera) {
-    _classCallCheck(this, DesktopFallback);
-
-    this.camera = camera;
-
-    var GRID_SIZE = 6;
-    var GRID_DIVISIONS = 12;
-    var LIGHT = 0xCCCCCC;
-    var MEDIUM = 0x999999;
-    var DARK = 0x666666;
-
-    var geometry = new THREE.SphereGeometry(50, 64, 64);
-    geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
-
-    var material = new THREE.MeshBasicMaterial({
-      flatShading: true,
-      map: new THREE.TextureLoader().load('images/bg-gray.jpg')
-    });
-
-    var environment = new THREE.Mesh(geometry, material);
-    scene.add(environment);
-
-    var grid = new THREE.Group();
-    var floor = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, MEDIUM, MEDIUM);
-    var floorOutline = new THREE.GridHelper(GRID_SIZE - 0.001, 1, DARK, DARK);
-    var wallBack = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, LIGHT, LIGHT);
-    var wallLeft = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, LIGHT, LIGHT);
-    var wallRight = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, LIGHT, LIGHT);
-
-    grid.position.set(0, -0.6, 0);
-    floorOutline.position.set(0, 0.001, 0);
-    wallBack.position.set(0, GRID_SIZE / 2, -GRID_SIZE / 2);
-    wallBack.rotateX(90 * THREE.Math.DEG2RAD);
-    wallLeft.position.set(-GRID_SIZE / 2, GRID_SIZE / 2, 0);
-    wallLeft.rotateZ(-90 * THREE.Math.DEG2RAD);
-    wallRight.position.set(GRID_SIZE / 2, GRID_SIZE / 2, 0);
-    wallRight.rotateZ(90 * THREE.Math.DEG2RAD);
-
-    // const groundPlane = new THREE.Mesh(
-    //   new THREE.PlaneBufferGeometry(GRID_SIZE, GRID_SIZE),
-    //   new THREE.MeshBasicMaterial({
-    //     color: LIGHT,
-    //     transparent: true,
-    //     opacity: 0.2
-    //   })
-    // )
-    // groundPlane.rotateX(-90 * THREE.Math.DEG2RAD)
-    // groundPlane.translateY(-0.001);
-
-    grid.add(floor);
-    grid.add(floorOutline);
-    grid.add(wallBack);
-    grid.add(wallLeft);
-    grid.add(wallRight);
-    // grid.add(groundPlane);
-    // scene.add(grid);
-
-    // this.camera.rotateZ(-25 * THREE.Math.DEG2RAD);
-    // this.camera.rotateY(-25 * THREE.Math.DEG2RAD);
-  }
-
-  _createClass(DesktopFallback, [{
-    key: 'animateCameraForwardBack',
-    value: function animateCameraForwardBack() {
-
-      var rotate = new TWEEN.Tween(this.camera.rotation).to({
-        x: [-10 * THREE.Math.DEG2RAD, 5 * THREE.Math.DEG2RAD, 0],
-        y: [-30 * THREE.Math.DEG2RAD, 30 * THREE.Math.DEG2RAD, 0],
-        z: [-15 * THREE.Math.DEG2RAD, 15 * THREE.Math.DEG2RAD, 0]
-      }, 5000).repeat(Infinity).easing(TWEEN.Easing.Quadratic.InOut).interpolation(TWEEN.Interpolation.Bezier).start();
-
-      var walk = new TWEEN.Tween(this.camera.position).to({ x: [-1, 1, 0], y: [1.5, 1.7, 1.5], z: [2, 3.5, 4] }, 5000).repeat(Infinity).easing(TWEEN.Easing.Quadratic.InOut).interpolation(TWEEN.Interpolation.Bezier).start();
-    }
-  }, {
-    key: 'animateCameraSideToSide',
-    value: function animateCameraSideToSide() {
-
-      // let rotate = new TWEEN.Tween(this.camera.rotation)
-      //   .to({
-      //     y: [-45 * THREE.Math.DEG2RAD, 45 * THREE.Math.DEG2RAD, 0]
-      //   }, 5000)
-      //   .repeat(Infinity)
-      //   .easing(TWEEN.Easing.Quadratic.InOut)
-      //   .interpolation(TWEEN.Interpolation.Bezier)
-      //   .start();
-
-      this.camera.position.y = 1;
-
-      var walk = new TWEEN.Tween(this.camera.position).to({ x: [-2, 2, 0] }, 10000).repeat(Infinity).easing(TWEEN.Easing.Quadratic.InOut).interpolation(TWEEN.Interpolation.Bezier).start();
-    }
-  }, {
-    key: 'animateCameraSpinAround',
-    value: function animateCameraSpinAround() {
-
-      this.camera.rotateX(30 * THREE.Math.DEG2RAD);
-      this.camera.rotateY(180 * THREE.Math.DEG2RAD);
-      this.camera.rotateZ(30 * THREE.Math.DEG2RAD);
-
-      new TWEEN.Tween(this.camera.rotation).to({
-        // x: -45 * THREE.Math.DEG2RAD,
-        y: -90 * THREE.Math.DEG2RAD
-      }, 5000).repeat(Infinity).easing(TWEEN.Easing.Quadratic.InOut).start();
-    }
-  }]);
-
-  return DesktopFallback;
-}();
-
-exports.default = DesktopFallback;
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1120,7 +993,7 @@ function isUndefined(arg) {
 }
 
 /***/ }),
-/* 6 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1145,9 +1018,10 @@ var RendererGL = function () {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.updateSize();
     this.renderer.domElement.style.position = 'absolute';
+    this.renderer.domElement.style.left = '50%';
     this.renderer.domElement.style.top = '50%';
     this.renderer.autoClear = false;
-    this.renderer.domElement.style.transform = 'translate(0, -50%)';
+    this.renderer.domElement.style.transform = 'translate(-50%, -50%)';
     // this.renderer.domElement.style.border = '6px solid yellow';
     // this.renderer.domElement.style.boxSizing = 'border-box';
     this.renderer.domElement.style.pointerEvents = 'none';
@@ -1179,327 +1053,7 @@ var RendererGL = function () {
 exports.default = RendererGL;
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var RendererCSS = function () {
-  function RendererCSS(container) {
-    var _this = this;
-
-    _classCallCheck(this, RendererCSS);
-
-    this.container = container;
-    this.renderer = new THREE.CSS3DRenderer();
-    this.updateSize();
-    this.renderer.domElement.style.position = 'absolute';
-    this.renderer.domElement.style.top = '50%';
-    this.renderer.domElement.style.transform = 'translate(0, -50%)';
-    // this.renderer.domElement.style.border = '4px solid red';
-    // this.renderer.domElement.style.boxSizing = 'border-box';
-    // this.renderer.domElement.style.pointerEvents = 'none';
-    // this.renderer.domElement.style.zIndex = 100;
-    container.appendChild(this.renderer.domElement);
-
-    document.addEventListener('DOMContentLoaded', function () {
-      return _this.updateSize();
-    }, false);
-    window.addEventListener('resize', function () {
-      return _this.updateSize();
-    }, false);
-  }
-
-  _createClass(RendererCSS, [{
-    key: 'updateSize',
-    value: function updateSize() {
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-  }, {
-    key: 'render',
-    value: function render(scene, camera) {
-      this.renderer.render(scene, camera);
-    }
-  }]);
-
-  return RendererCSS;
-}();
-
-exports.default = RendererCSS;
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _bus = __webpack_require__(0);
-
-var _bus2 = _interopRequireDefault(_bus);
-
-var _mountains = __webpack_require__(9);
-
-var _mountains2 = _interopRequireDefault(_mountains);
-
-var _gray = __webpack_require__(10);
-
-var _gray2 = _interopRequireDefault(_gray);
-
-var _transparent = __webpack_require__(11);
-
-var _transparent2 = _interopRequireDefault(_transparent);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Environments = function () {
-  function Environments(scene) {
-    var _this = this;
-
-    _classCallCheck(this, Environments);
-
-    // Setup variables
-    this.activeEnvironment;
-    this.activeButton;
-
-    // Setup environments
-    this.gray = new _gray2.default(scene);
-    this.mountains = new _mountains2.default(scene);
-    this.transparent = new _transparent2.default(scene);
-
-    // Setup buttons
-    this.background1Button = document.querySelector('#background-1');
-    this.background2Button = document.querySelector('#background-2');
-    this.background3Button = document.querySelector('#background-3');
-
-    this.background1Button.addEventListener('click', function () {
-      return _this.load(_this.background1Button, _this.mountains);
-    });
-    this.background2Button.addEventListener('click', function () {
-      return _this.load(_this.background2Button, _this.gray);
-    });
-    this.background3Button.addEventListener('click', function () {
-      return _this.load(_this.background3Button, _this.transparent);
-    });
-
-    // Setup event listeners
-    _bus2.default.on('pageLoad', function () {
-      return _this.onPageLoad();
-    });
-    _bus2.default.on('enterAR', function () {
-      return _this.load(_this.background3Button, _this.transparent);
-    });
-    _bus2.default.on('exitAR', function () {
-      return _this.load(_this.background1Button, _this.mountains);
-    });
-  }
-
-  _createClass(Environments, [{
-    key: 'onPageLoad',
-    value: function onPageLoad() {
-      this.load(this.background1Button, this.mountains);
-    }
-  }, {
-    key: 'load',
-    value: function load(pressedButton, targetEnvironment) {
-
-      // Check if targetEnvironment is different from active one...
-      if (this.activeEnvironment !== targetEnvironment) {
-
-        // Update environment
-        if (this.activeEnvironment) this.activeEnvironment.unload(); // If there is an activeEnvironment, unload it. Else do nothing
-        targetEnvironment.load();
-        this.activeEnvironment = targetEnvironment;
-
-        // Update buttons
-        if (this.activeButton) this.activeButton.classList.remove('active'); // If there is an activeButton, remove active class. Else do nothing
-        pressedButton.classList.add('active');
-        this.activeButton = pressedButton;
-      }
-    }
-  }]);
-
-  return Environments;
-}();
-
-exports.default = Environments;
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Mountains = function () {
-  function Mountains(scene) {
-    _classCallCheck(this, Mountains);
-
-    this.scene = scene;
-    this.group = new THREE.Group();
-    this.pano = new THREE.Mesh(new THREE.SphereBufferGeometry(40, 64, 64), new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load('images/bg-mountains.jpg'),
-      flatShading: true,
-      side: THREE.BackSide
-    }));
-    this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      transparent: true,
-      opacity: 0.2,
-      side: THREE.DoubleSide
-    }));
-    this.plane.rotation.set(1.57, 0, 0);
-    // this.plane.position.set(0, 0.04, 0);
-    this.group.add(this.plane);
-    this.group.add(this.pano);
-
-    // new TWEEN.Tween(this.plane.rotation)
-    //   .to({ x: 2 }, 6000)
-    //   // .repeat(Infinity)
-    //   .start();
-  }
-
-  _createClass(Mountains, [{
-    key: 'load',
-    value: function load() {
-      this.scene.add(this.group);
-    }
-  }, {
-    key: 'unload',
-    value: function unload() {
-      this.scene.remove(this.group);
-    }
-  }]);
-
-  return Mountains;
-}();
-
-exports.default = Mountains;
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Gray = function () {
-  function Gray(scene) {
-    _classCallCheck(this, Gray);
-
-    this.scene = scene;
-    this.group = new THREE.Group();
-    this.pano = new THREE.Mesh(new THREE.SphereBufferGeometry(40, 64, 64), new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load('images/bg-gray.jpg'),
-      flatShading: true,
-      side: THREE.BackSide
-    }));
-    this.group.add(this.pano);
-  }
-
-  _createClass(Gray, [{
-    key: 'load',
-    value: function load() {
-      this.scene.add(this.group);
-    }
-  }, {
-    key: 'unload',
-    value: function unload() {
-      this.scene.remove(this.group);
-    }
-  }]);
-
-  return Gray;
-}();
-
-exports.default = Gray;
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Transparent = function () {
-  function Transparent(scene) {
-    _classCallCheck(this, Transparent);
-
-    this.scene = scene;
-    this.group = new THREE.Group();
-    // this.pano = new THREE.Mesh(
-    //   new THREE.SphereBufferGeometry(10, 64, 64),
-    //   new THREE.MeshBasicMaterial({
-    //     map: new THREE.TextureLoader().load('images/bg-mountains.jpg'),
-    //     shading: THREE.FlatShading,
-    //     side: THREE.BackSide
-    //   })
-    // );
-    // this.group.add(this.pano)
-  }
-
-  _createClass(Transparent, [{
-    key: "load",
-    value: function load() {
-      this.scene.add(this.group);
-      // document.html.style.backgroundColor = 'rgba(255, 255, 255, 0)';
-    }
-  }, {
-    key: "unload",
-    value: function unload() {
-      this.scene.remove(this.group);
-      // document.body.style.backgroundColor = 'white';
-    }
-  }]);
-
-  return Transparent;
-}();
-
-exports.default = Transparent;
-
-/***/ }),
-/* 12 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

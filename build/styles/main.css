@@ -6,13 +6,15 @@ html, body {
 html {
   background-color: rgba(255, 255, 255, 0);
   font-size: 6px;
+  /*overflow-y: visible;*/
+  /*overflow-x: hidden;*/
 }
 
 body {
   background-color: #005E9B;
   overflow-y: scroll;
   overflow-x: hidden;
-}
+ }
 
 header {
   background-image: linear-gradient(-180deg, #025890 15%, #559DD3 88%, #65B2EB 100%);
@@ -62,6 +64,9 @@ header {
   background-size: cover;
   height: 60rem;
   position: relative;
+  overflow-y: visible;
+  overflow-x: hidden;
+  pointer-events: none;
 }
 
 #ready-to-roll {
@@ -75,14 +80,14 @@ header {
 #jeep {
   top: 10rem;
   left: 50%;
-  width: 72rem;
+  max-width: 72rem;
   position: absolute;
   transform: translate(-50%, 0);
 }
 
 #viewer {
   box-sizing: border-box;
-  height: 48rem;
+  height: 42rem;
   padding: 0 4rem;
   text-align: center;
   width: 100%;

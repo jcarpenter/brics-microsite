@@ -12,7 +12,7 @@ export default class RendererGL {
     this.renderer.domElement.style.transform = 'translate(-50%, -50%)';
     // this.renderer.domElement.style.border = '6px solid yellow';
     // this.renderer.domElement.style.boxSizing = 'border-box';
-    this.renderer.domElement.style.pointerEvents = 'none';
+    // this.renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(this.renderer.domElement);
 
     document.addEventListener('DOMContentLoaded', () => this.updateSize(), false);
@@ -20,7 +20,10 @@ export default class RendererGL {
   }
 
   updateSize() {
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    let w = window.getComputedStyle(this.container).getPropertyValue('width').split("px")[0];
+    let h = window.getComputedStyle(this.container).getPropertyValue('height').split("px")[0];
+    this.renderer.setSize(w, h);
   }
 
   render(scene, camera) {
