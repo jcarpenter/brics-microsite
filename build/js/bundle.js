@@ -201,6 +201,7 @@ var App = function () {
       // Create container elements
       this.container = document.querySelector("#container");
       this.viewer = document.querySelector("#viewer");
+      this.splash = document.querySelector("#splash");
 
       // Setup scene and renderers
       this.scene = new THREE.Scene();
@@ -210,7 +211,7 @@ var App = function () {
       // Set `pointer-events` to none so we can appropriately receive events.
       // this.rendererGL.renderer.domElement.style.pointerEvents = 'auto';
       // this.rendererCSS.renderer.domElement.style.pointerEvents = 'none';
-      this.rendererGL.renderer.domElement.addEventListener('touchstart', function () {
+      this.rendererGL.renderer.domElement.addEventListener('click', function () {
         return _this2.onCanvasClick();
       }, true);
 
@@ -610,6 +611,7 @@ var App = function () {
       }.bind(this));
 
       // The following classes animate the viewport and other elements into position
+      this.splash.classList.add('fullscreen');
       this.viewer.classList.add('fullscreen');
       this.container.classList.add('fullscreen');
       this.enterButton.classList.add('fullscreen');
@@ -686,6 +688,21 @@ var App = function () {
       }
     }
   }, {
+    key: 'requestAnimationFrame',
+    value: function (_requestAnimationFrame) {
+      function requestAnimationFrame(_x) {
+        return _requestAnimationFrame.apply(this, arguments);
+      }
+
+      requestAnimationFrame.toString = function () {
+        return _requestAnimationFrame.toString();
+      };
+
+      return requestAnimationFrame;
+    }(function (cb) {
+      return this.vrDisplay ? this.vrDisplay.requestAnimationFrame(cb) : requestAnimationFrame(cb);
+    })
+  }, {
     key: 'render',
     value: function render() {
 
@@ -712,7 +729,7 @@ var App = function () {
       this.perspCamera.updateMatrix();
       this.rendererGL.render(this.scene, this.activeCamera);
       // this.rendererCSS.render(this.scene, this.activeCamera);
-      requestAnimationFrame(this.render);
+      this.requestAnimationFrame(this.render);
     }
 
     /*======== OLD ========= */
