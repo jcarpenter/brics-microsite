@@ -135,7 +135,11 @@ var App = function () {
     // this.cssCamera;
     this.currentMode;
     this.deviceType;
-    this.viewer;
+    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.hemisphereLight;
+    this.LIGHTING_INTENSITY_FOR_AR = 1.8;
+    this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP = 1.3;
+    this.model;
     this.orbitControls;
     this.PERSP_CAMERA_FOV = 15;
     this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
@@ -143,12 +147,17 @@ var App = function () {
     this.render = this.render.bind(this);
     this.scrollOffset;
     this.scrollTarget;
-    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.viewer;
     this.viewerOffsetFromTop;
     this.viewerPlaceholder;
     this.vrControls;
     this.vrDisplay;
     this.vrFrameData;
+
+    // Global Draco decoder type.
+    this.dracoDecoderType = {};
+    this.dracoDecoderType.type = 'js';
+    this.dracoLoader = new THREE.DRACOLoader('js/third_party/draco/', this.dracoDecoderType);
 
     // Check for AR displays
     THREE.ARUtils.getARDisplay().then(function (display) {
@@ -372,7 +381,37 @@ var App = function () {
     key: 'createModel',
     value: function createModel() {
 
-      this.model;
+      /*
+      this.dracoLoader.load( 'models/sphere.drc', geometry => {
+         let mtlLoader = new THREE.MTLLoader();
+        mtlLoader.load('models/sphere.mtl', materials => {
+           console.log("Test");
+          materials.preload();
+          // console.log(materials);
+          let mat = materials.materials.test;
+          console.log(mat);
+          // // this.loadModel(mat);
+           this.createGrid();
+          geometry.computeVertexNormals();
+           let material = new THREE.MeshNormalMaterial();
+          let mesh = new THREE.Mesh( geometry, mat );
+          mesh.geometry.applyMatrix( new THREE.Matrix4().makeScale(0.0001, 0.0001, 0.0001) );
+          // mesh.castShadow = true;
+          // mesh.receiveShadow = true;
+          
+          mesh.traverse(node => {
+            if( node.material ) {
+              node.material.side = THREE.DoubleSide;
+            }
+          })
+           console.log(mesh);
+           this.model = mesh;
+          this.scene.add( this.model );
+          // this.model.scale.set(0.1, 0.1, 0.1);
+         });
+      });
+      */
+
       this.loadingManager = new THREE.LoadingManager();
       this.loader = new THREE.ColladaLoader(this.loadingManager);
       this.loader.load('models/jeep.dae', function (collada) {
@@ -381,6 +420,7 @@ var App = function () {
 
         // Set all materials to DoubleSide, to compensate for flipped normals in the original model
         collada.scene.traverse(function (node) {
+          // console.log(node.name);
           if (node.material) {
             node.material.side = THREE.DoubleSide;
           }
@@ -388,16 +428,19 @@ var App = function () {
 
         this.model = collada.scene;
         this.scene.add(this.model);
+        var wheels_left = this.model.getObjectByName("wheels-right");
+        wheels_left.position.set(-1000, 0, 0);
+        new TWEEN.Tween(this.model.getObjectByName("wheels-right").position).to({ x: 0 }, 3000).start();
 
         // Fire pageLoad once model is ready
-        _bus2.default.emit('pageLoad');
+        // bus.emit('pageLoad');
       }.bind(this));
     }
   }, {
     key: 'createLights',
     value: function createLights() {
-      this.light = new THREE.HemisphereLight(0xF5F5F5, 0x1F1F1F, 1.3);
-      this.scene.add(this.light);
+      this.hemisphereLight = new THREE.HemisphereLight(0xF5F5F5, 0x1F1F1F, this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP);
+      this.scene.add(this.hemisphereLight);
     }
   }, {
     key: 'createGrid',
@@ -564,6 +607,7 @@ var App = function () {
         this.scene.add(this.reticle);
         this.setActiveCamera(this.arCamera);
         this.grid.visible = false;
+        this.hemisphereLight.intensity = this.LIGHTING_INTENSITY_FOR_AR;
       }.bind(this));
 
       // The following classes animate the viewport and other elements into position
@@ -585,7 +629,6 @@ var App = function () {
       var viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
       // Remove the following classes to animate the viewport and other elements back to their standard positions
-      this.splash.classList.remove('fullscreen');
       this.viewer.classList.remove('fullscreen');
       this.container.classList.remove('fullscreen');
       this.enterButton.classList.remove('fullscreen');
