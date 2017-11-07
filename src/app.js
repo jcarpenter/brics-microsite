@@ -21,7 +21,11 @@ export default class App {
     // this.cssCamera;
     this.currentMode;
     this.deviceType;
-    this.viewer;
+    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.hemisphereLight;
+    this.LIGHTING_INTENSITY_FOR_AR = 1.8;
+    this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP = 1.3;
+    this.model;
     this.orbitControls;
     this.PERSP_CAMERA_FOV = 15;
     this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
@@ -29,13 +33,18 @@ export default class App {
     this.render = this.render.bind(this);
     this.scrollOffset;
     this.scrollTarget;
-    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.viewer;
     this.viewerOffsetFromTop;
     this.viewerPlaceholder;
     this.vrControls;
     this.vrDisplay;
     this.vrFrameData;
     
+    // Global Draco decoder type.
+    this.dracoDecoderType = {};
+    this.dracoDecoderType.type = 'js';
+    this.dracoLoader = new THREE.DRACOLoader('js/third_party/draco/', this.dracoDecoderType);
+
     // Check for AR displays
     THREE.ARUtils.getARDisplay().then(display => {
       this.vrDisplay = display;
@@ -239,7 +248,44 @@ export default class App {
 
   createModel() {
     
-    this.model;
+    /*
+    this.dracoLoader.load( 'models/sphere.drc', geometry => {
+
+      let mtlLoader = new THREE.MTLLoader();
+      mtlLoader.load('models/sphere.mtl', materials => {
+
+        console.log("Test");
+        materials.preload();
+        // console.log(materials);
+        let mat = materials.materials.test;
+        console.log(mat);
+        // // this.loadModel(mat);
+
+        this.createGrid();
+        geometry.computeVertexNormals();
+
+        let material = new THREE.MeshNormalMaterial();
+        let mesh = new THREE.Mesh( geometry, mat );
+        mesh.geometry.applyMatrix( new THREE.Matrix4().makeScale(0.0001, 0.0001, 0.0001) );
+        // mesh.castShadow = true;
+        // mesh.receiveShadow = true;
+        
+        mesh.traverse(node => {
+          if( node.material ) {
+            node.material.side = THREE.DoubleSide;
+          }
+        })
+
+        console.log(mesh);
+
+        this.model = mesh;
+        this.scene.add( this.model );
+        // this.model.scale.set(0.1, 0.1, 0.1);
+
+      });
+    });
+    */
+
     this.loadingManager = new THREE.LoadingManager();
     this.loader = new THREE.ColladaLoader( this.loadingManager );
     this.loader.load('models/jeep.dae', function(collada){
@@ -248,6 +294,7 @@ export default class App {
 
       // Set all materials to DoubleSide, to compensate for flipped normals in the original model
       collada.scene.traverse( function( node ) {
+        // console.log(node.name);
         if( node.material ) {
           node.material.side = THREE.DoubleSide;
         }
@@ -255,16 +302,22 @@ export default class App {
 
       this.model = collada.scene;
       this.scene.add(this.model)
+      let wheels_left = this.model.getObjectByName("wheels-right");
+      wheels_left.position.set(0, 0, 200);
+      new TWEEN.Tween(this.model.getObjectByName("wheels-right").position)
+      .to({z: 0 }, 1000)
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .start()
 
       // Fire pageLoad once model is ready
-      bus.emit('pageLoad');
+      // bus.emit('pageLoad');
 
     }.bind(this));
   }
 
   createLights() {
-    this.light = new THREE.HemisphereLight( 0xF5F5F5, 0x1F1F1F, 1.3 );
-    this.scene.add( this.light );
+    this.hemisphereLight = new THREE.HemisphereLight( 0xF5F5F5, 0x1F1F1F, this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP );
+    this.scene.add( this.hemisphereLight );
   }
 
   createGrid() {
@@ -405,6 +458,8 @@ export default class App {
     this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
     this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
     this.viewer.parentElement.insertBefore( this.viewerPlaceholder, this.viewer );
+
+
  
     // Prevent page scrolling by setting overflow and hidden values on documentElement
     document.documentElement.style.overflowY = 'hidden';
@@ -432,6 +487,7 @@ export default class App {
       this.scene.add(this.reticle);
       this.setActiveCamera(this.arCamera);
       this.grid.visible = false;
+      this.hemisphereLight.intensity = this.LIGHTING_INTENSITY_FOR_AR;
     }.bind(this));
 
     // The following classes animate the viewport and other elements into position
@@ -521,6 +577,10 @@ export default class App {
     }
   }
 
+  requestAnimationFrame(cb) {
+    return this.vrDisplay ? this.vrDisplay.requestAnimationFrame(cb) : requestAnimationFrame(cb);
+  }
+  
   render() {
 
     TWEEN.update();
@@ -552,7 +612,8 @@ export default class App {
     this.perspCamera.updateMatrix();
     this.rendererGL.render(this.scene, this.activeCamera);
     // this.rendererCSS.render(this.scene, this.activeCamera);
-    requestAnimationFrame(this.render);
+    this.requestAnimationFrame(this.render);
+
   }
 
 
