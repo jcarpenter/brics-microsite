@@ -76,6 +76,7 @@ export default class App {
     // Create container elements
     this.container = document.querySelector("#container");
     this.viewer = document.querySelector("#viewer");
+    this.splash = document.querySelector("#splash");
     
     // Setup scene and renderers
     this.scene = new THREE.Scene();
@@ -85,7 +86,7 @@ export default class App {
     // Set `pointer-events` to none so we can appropriately receive events.
     // this.rendererGL.renderer.domElement.style.pointerEvents = 'auto';
     // this.rendererCSS.renderer.domElement.style.pointerEvents = 'none';
-    this.rendererGL.renderer.domElement.addEventListener('touchstart', () =>
+    this.rendererGL.renderer.domElement.addEventListener('click', () =>
       this.onCanvasClick(), true);
 
     // Create scene root group
@@ -435,6 +436,7 @@ export default class App {
     }.bind(this));
 
     // The following classes animate the viewport and other elements into position
+    this.splash.classList.add('fullscreen');
     this.viewer.classList.add('fullscreen');
     this.container.classList.add('fullscreen');
     this.enterButton.classList.add('fullscreen');
@@ -452,6 +454,7 @@ export default class App {
     let viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
     // Remove the following classes to animate the viewport and other elements back to their standard positions
+    this.splash.classList.remove('fullscreen');
     this.viewer.classList.remove('fullscreen');
     this.container.classList.remove('fullscreen');
     this.enterButton.classList.remove('fullscreen');
@@ -521,6 +524,10 @@ export default class App {
     }
   }
 
+  requestAnimationFrame(cb) {
+    return this.vrDisplay ? this.vrDisplay.requestAnimationFrame(cb) : requestAnimationFrame(cb);
+  }
+
   render() {
 
     TWEEN.update();
@@ -552,7 +559,7 @@ export default class App {
     this.perspCamera.updateMatrix();
     this.rendererGL.render(this.scene, this.activeCamera);
     // this.rendererCSS.render(this.scene, this.activeCamera);
-    requestAnimationFrame(this.render);
+    this.requestAnimationFrame(this.render);
   }
 
 

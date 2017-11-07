@@ -137,7 +137,7 @@ var App = function () {
     this.deviceType;
     this.viewer;
     this.orbitControls;
-    this.PERSP_CAMERA_ISO_FOV = 15;
+    this.PERSP_CAMERA_FOV = 15;
     this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
     this.perspCamera;
     this.render = this.render.bind(this);
@@ -192,6 +192,7 @@ var App = function () {
       // Create container elements
       this.container = document.querySelector("#container");
       this.viewer = document.querySelector("#viewer");
+      this.splash = document.querySelector("#splash");
 
       // Setup scene and renderers
       this.scene = new THREE.Scene();
@@ -199,9 +200,9 @@ var App = function () {
       // this.rendererCSS = new RendererCSS(this.container);
 
       // Set `pointer-events` to none so we can appropriately receive events.
-      this.rendererGL.renderer.domElement.style.pointerEvents = 'auto';
+      // this.rendererGL.renderer.domElement.style.pointerEvents = 'auto';
       // this.rendererCSS.renderer.domElement.style.pointerEvents = 'none';
-      this.rendererGL.renderer.domElement.addEventListener('touchstart', function () {
+      this.rendererGL.renderer.domElement.addEventListener('click', function () {
         return _this2.onCanvasClick();
       }, true);
 
@@ -266,15 +267,56 @@ var App = function () {
       element.classList.remove("hidden");
     }
   }, {
+    key: 'getContainerSize',
+    value: function getContainerSize() {
+
+      var w = window.getComputedStyle(this.container).getPropertyValue('width').split("px")[0];
+      var h = window.getComputedStyle(this.container).getPropertyValue('height').split("px")[0];
+
+      return {
+        width: w,
+        height: h
+      };
+    }
+  }, {
+    key: 'setActiveCamera',
+    value: function setActiveCamera(cam) {
+      this.activeCamera = cam;
+    }
+  }, {
+    key: 'updateCameraAndCanvas',
+    value: function updateCameraAndCanvas() {
+      var _this3 = this;
+
+      var duration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 800;
+
+
+      new TWEEN.Tween({ placeholder: 0 }).to({ placeholder: 0 }, duration).onUpdate(function () {
+        _this3.rendererGL.updateSize();
+        _this3.perspCamera.aspect = _this3.getContainerSize().width / _this3.getContainerSize().height;
+        _this3.perspCamera.updateProjectionMatrix();
+      }).start();
+    }
+  }, {
     key: 'createArCameras',
     value: function createArCameras() {
+      var _this4 = this;
 
       this.vrFrameData = new VRFrameData();
 
       this.arCamera = new THREE.ARPerspectiveCamera(this.vrDisplay, 60, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
 
-      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
-      // this.cssCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV - 5, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
+      this.perspCamera.position.set(12, 12, 12);
+      this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
+
+      window.addEventListener('resize', function () {
+        _this4.updateCameraAndCanvas(0);
+      });
+
+      this.updateCameraAndCanvas(0);
+
+      // this.cssCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
 
       this.vrControls = new THREE.VRControls(this.arCamera);
       this.arView = new THREE.ARView(this.vrDisplay, this.rendererGL.renderer);
@@ -290,24 +332,23 @@ var App = function () {
   }, {
     key: 'createMobileCamera',
     value: function createMobileCamera() {
-      var _this3 = this;
+      var _this5 = this;
 
-      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, 0.1, 100);
-      this.perspCamera.position.set(36, 36, 36);
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV, this.getContainerSize().width / this.getContainerSize().height, 0.1, 100);
+      this.perspCamera.position.set(12, 12, 12);
       this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
 
       window.addEventListener('resize', function () {
-        _this3.perspCamera.aspect = window.innerWidth / window.innerHeight;
-        _this3.perspCamera.updateProjectionMatrix();
+        _this5.updateCameraAndCanvas(0);
       });
     }
   }, {
     key: 'createDesktopCamera',
     value: function createDesktopCamera() {
-      var _this4 = this;
+      var _this6 = this;
 
-      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_ISO_FOV, window.innerWidth / window.innerHeight, 0.1, 100);
-      this.perspCamera.position.set(36, 36, 36);
+      this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV, this.getContainerSize().width / this.getContainerSize().height, 0.1, 100);
+      this.perspCamera.position.set(12, 12, 12);
       this.orbitControls = new THREE.OrbitControls(this.perspCamera, this.rendererGL.renderer.domElement);
       // Enable animation loop when using damping or autorotation
       this.orbitControls.autoRotate = true;
@@ -324,8 +365,7 @@ var App = function () {
       this.container.style.cursor = '-webkit-grab';
 
       window.addEventListener('resize', function () {
-        _this4.perspCamera.aspect = window.innerWidth / window.innerHeight;
-        _this4.perspCamera.updateProjectionMatrix();
+        _this6.updateCameraAndCanvas(0);
       });
     }
   }, {
@@ -356,7 +396,7 @@ var App = function () {
   }, {
     key: 'createLights',
     value: function createLights() {
-      this.light = new THREE.HemisphereLight(0xF5F5F5, 0x1F1F1F, 1);
+      this.light = new THREE.HemisphereLight(0xF5F5F5, 0x1F1F1F, 1.3);
       this.scene.add(this.light);
     }
   }, {
@@ -388,11 +428,6 @@ var App = function () {
       //   .to({ opacity: 0 }, 1000)
       //   .start();
       this.model.visible = false;
-    }
-  }, {
-    key: 'setActiveCamera',
-    value: function setActiveCamera(cam) {
-      this.activeCamera = cam;
     }
   }, {
     key: 'enter',
@@ -439,6 +474,9 @@ var App = function () {
       // The key is setting "top" value to equal the viewer's Y position relative to viewport top, then setting position absolute.
       this.viewer.style.position = 'absolute';
 
+      // Tweens the canvas and camera aspect ratio to match the new container size
+      this.updateCameraAndCanvas();
+
       var transition = this.viewer.animate([{ top: String(this.viewerOffsetFromTop + 'px') }, { top: String(window.scrollY + 'px') }], {
         duration: this.ENTER_EXIT_TRANSITION_DURATION,
         easing: 'ease'
@@ -458,19 +496,20 @@ var App = function () {
     value: function exitFullscreen() {
 
       this.exitButton.classList.add("hidden");
-      this.currentMode = 'fullscreen';
+      this.currentMode = '2d';
 
-      // Prevent page scrolling by setting overflow and hidden values on documentElement
-      // document.documentElement.style.overflowY = 'scroll';
-      // document.documentElement.style.height = 'auto';
+      // Re-enable page scrolling by removing height and overflow styles on document.documenElement
       document.documentElement.removeAttribute('style');
 
       var viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
-      // The following classes animate the viewport and other elements into position
+      // Remove the following classes to animate the viewport and other elements back to their standard positions
       this.viewer.classList.remove('fullscreen');
       this.container.classList.remove('fullscreen');
       this.enterButton.classList.remove('fullscreen');
+
+      // Tweens the canvas and camera aspect ratio to match the new container size
+      this.updateCameraAndCanvas();
 
       var transition = this.viewer.animate([{ top: viewerCurrentPosition }, { top: String(this.viewerOffsetFromTop + 'px') }], {
         duration: this.ENTER_EXIT_TRANSITION_DURATION,
@@ -489,7 +528,6 @@ var App = function () {
     value: function enterAR() {
 
       this.exitButton.classList.remove("hidden");
-      this.currentMode = 'ar';
 
       // We store this for later
       this.viewerOffsetFromTop = this.viewer.getBoundingClientRect().top + window.scrollY;
@@ -511,6 +549,9 @@ var App = function () {
       // The key is setting "top" value to equal the viewer's Y position relative to viewport top, then setting position absolute.
       this.viewer.style.position = 'absolute';
 
+      // Tweens the canvas and camera aspect ratio to match the new container size
+      this.updateCameraAndCanvas();
+
       var transition = this.viewer.animate([{ top: String(this.viewerOffsetFromTop + 'px') }, { top: String(window.scrollY + 'px') }], {
         duration: this.ENTER_EXIT_TRANSITION_DURATION,
         easing: 'ease'
@@ -518,58 +559,57 @@ var App = function () {
 
       transition.addEventListener('finish', function () {
         this.viewer.style.top = String(window.scrollY + 'px');
+        this.currentMode = 'ar';
+        this.hideModel();
+        this.scene.add(this.reticle);
+        this.setActiveCamera(this.arCamera);
+        this.grid.visible = false;
       }.bind(this));
 
       // The following classes animate the viewport and other elements into position
+      this.splash.classList.add('fullscreen');
       this.viewer.classList.add('fullscreen');
       this.container.classList.add('fullscreen');
       this.enterButton.classList.add('fullscreen');
-
-      // this.hideModel();
-      // this.scene.add(this.reticle);
-      // this.setActiveCamera(this.arCamera);
     }
   }, {
     key: 'exitAR',
     value: function exitAR() {
 
-      this.enterAr.classList.remove("hidden");
       this.exitButton.classList.add("hidden");
-      this.currentMode = 'default';
+      this.currentMode = '2d';
 
-      // Update container styles and scroll position
-      this.container.style.height = '40rem';
-      this.container.style.position = 'relative';
+      // Re-enable page scrolling by removing height and overflow styles on document.documenElement
+      document.documentElement.removeAttribute('style');
 
-      // Enable scrolling. This will snap the scroll to the top of the page.
-      document.documentElement.style.overflow = 'scroll';
-      document.documentElement.style.height = 'auto';
-      document.body.style.backgroundColor = 'white';
+      var viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
-      // Setting overflow and height values snaps the scroll position to the top of the page, so we need to set the window scroll back to the top of the container.
-      window.scroll(0, this.scrollTarget);
+      // Remove the following classes to animate the viewport and other elements back to their standard positions
+      this.splash.classList.remove('fullscreen');
+      this.viewer.classList.remove('fullscreen');
+      this.container.classList.remove('fullscreen');
+      this.enterButton.classList.remove('fullscreen');
 
-      // Animate the scroll back to position the page was in before entering AR mode.
-      _zenscroll2.default.toY(this.scrollOffset, 500, function () {});
+      // Tween the canvas and camera aspect ratio to match the new container size
+      this.updateCameraAndCanvas();
 
-      // If going to 2D from AR/Magic where ARCamera is used,
-      // match the cameras for now
-      // if (this.activeCamera !== this.perspCamera) {
-      //   this.perspCamera.position.copy(this.arCamera.position);
-      //   this.perspCamera.quaternion.copy(this.arCamera.quaternion);
-      //   this.setActiveCamera(this.perspCamera);
-      // }
+      var transition = this.viewer.animate([{ top: viewerCurrentPosition }, { top: String(this.viewerOffsetFromTop + 'px') }], {
+        duration: this.ENTER_EXIT_TRANSITION_DURATION,
+        easing: 'ease'
+      });
+
+      transition.addEventListener('finish', function () {
+        this.viewerPlaceholder.remove();
+        this.viewer.style.position = 'relative';
+        this.viewer.style.top = 0;
+      }.bind(this));
 
       this.setActiveCamera(this.perspCamera);
-
       this.showModel();
-      // this.showBackground();
-      // this.hidePano();
-
       this.scene.remove(this.reticle);
 
       // this.animatePerspCameraPosition({ x: 0, y: 1, z: 0 }, this.group.position);
-      // this.animatePerspCameraFov(this.PERSP_CAMERA_ISO_FOV);
+      // this.animatePerspCameraFov(this.PERSP_CAMERA_FOV);
 
       // Tween group to 2D-mode position/rotation
       // new TWEEN.Tween(this.group.position)
@@ -585,7 +625,8 @@ var App = function () {
   }, {
     key: 'onCanvasClick',
     value: function onCanvasClick() {
-      if (this.vrDisplay && this.vrDisplay.hitTest && this.currentMode === 'AR') {
+
+      if (this.vrDisplay && this.vrDisplay.hitTest && this.currentMode === 'ar') {
         var hits = this.vrDisplay.hitTest(0.5, 0.5);
         if (hits && hits.length) {
           var hit = hits[0];
@@ -599,10 +640,25 @@ var App = function () {
   }, {
     key: 'onTouchMove',
     value: function onTouchMove(e) {
-      if (this.currentMode === 'AR') {
+      if (this.currentMode === 'ar') {
         e.preventDefault();
       }
     }
+  }, {
+    key: 'requestAnimationFrame',
+    value: function (_requestAnimationFrame) {
+      function requestAnimationFrame(_x) {
+        return _requestAnimationFrame.apply(this, arguments);
+      }
+
+      requestAnimationFrame.toString = function () {
+        return _requestAnimationFrame.toString();
+      };
+
+      return requestAnimationFrame;
+    }(function (cb) {
+      return this.vrDisplay ? this.vrDisplay.requestAnimationFrame(cb) : requestAnimationFrame(cb);
+    })
   }, {
     key: 'render',
     value: function render() {
@@ -630,10 +686,12 @@ var App = function () {
       this.perspCamera.updateMatrix();
       this.rendererGL.render(this.scene, this.activeCamera);
       // this.rendererCSS.render(this.scene, this.activeCamera);
-      requestAnimationFrame(this.render);
+      this.requestAnimationFrame(this.render);
     }
 
     /*======== OLD ========= */
+
+    // Not currently used, and can potentially be deleted
 
   }, {
     key: 'getCameraFov',
@@ -658,10 +716,10 @@ var App = function () {
   }, {
     key: 'animatePerspCameraPosition',
     value: function animatePerspCameraPosition(pos, target, onComplete) {
-      var _this5 = this;
+      var _this7 = this;
 
       new TWEEN.Tween(this.perspCamera.position).to(pos, 1000).onUpdate(function () {
-        return target && _this5.perspCamera.lookAt(target);
+        return target && _this7.perspCamera.lookAt(target);
       }).onComplete(function () {
         if (typeof onComplete === 'function') onComplete();
       }).easing(TWEEN.Easing.Quadratic.InOut).start();
@@ -674,10 +732,10 @@ var App = function () {
   }, {
     key: 'animatePerspCameraFov',
     value: function animatePerspCameraFov(fov) {
-      var _this6 = this;
+      var _this8 = this;
 
       new TWEEN.Tween(this.perspCamera).to({ fov: fov }, 1000).onUpdate(function () {
-        return _this6.perspCamera.updateProjectionMatrix();
+        return _this8.perspCamera.updateProjectionMatrix();
       }).easing(TWEEN.Easing.Quadratic.InOut).start();
     }
 
@@ -1024,7 +1082,7 @@ var RendererGL = function () {
     this.renderer.domElement.style.transform = 'translate(-50%, -50%)';
     // this.renderer.domElement.style.border = '6px solid yellow';
     // this.renderer.domElement.style.boxSizing = 'border-box';
-    this.renderer.domElement.style.pointerEvents = 'none';
+    // this.renderer.domElement.style.pointerEvents = 'none';
     container.appendChild(this.renderer.domElement);
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -1038,7 +1096,10 @@ var RendererGL = function () {
   _createClass(RendererGL, [{
     key: 'updateSize',
     value: function updateSize() {
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+      var w = window.getComputedStyle(this.container).getPropertyValue('width').split("px")[0];
+      var h = window.getComputedStyle(this.container).getPropertyValue('height').split("px")[0];
+      this.renderer.setSize(w, h);
     }
   }, {
     key: 'render',
