@@ -429,8 +429,8 @@ var App = function () {
         this.model = collada.scene;
         this.scene.add(this.model);
         var wheels_left = this.model.getObjectByName("wheels-right");
-        wheels_left.position.set(-1000, 0, 0);
-        new TWEEN.Tween(this.model.getObjectByName("wheels-right").position).to({ x: 0 }, 3000).start();
+        wheels_left.position.set(0, 0, 200);
+        new TWEEN.Tween(this.model.getObjectByName("wheels-right").position).to({ z: 0 }, 1000).easing(TWEEN.Easing.Quadratic.Out).start();
 
         // Fire pageLoad once model is ready
         // bus.emit('pageLoad');
@@ -629,6 +629,7 @@ var App = function () {
       var viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
       // Remove the following classes to animate the viewport and other elements back to their standard positions
+      this.splash.classList.remove('fullscreen');
       this.viewer.classList.remove('fullscreen');
       this.container.classList.remove('fullscreen');
       this.enterButton.classList.remove('fullscreen');

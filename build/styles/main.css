@@ -58,94 +58,164 @@ header {
 }
 
 #splash {
-  background-attachment: top center;
   background-image: url(../images/splash.jpg);
   background-position: center;
   background-size: cover;
   height: 60rem;
+  max-height: 100vw;
+  max-width: 100vw;
   position: relative;
-  overflow-y: visible;
-  overflow-x: hidden;
+  /*clip: rect(20rem, 20rem, 20rem, 20rem);*/
+  /*overflow-y: visible;*/
+  /*overflow-x: hidden; */
   pointer-events: none;
-  z-index: 10;
-}
-
-#splash.fullscreen {
-  display: none;
 }
 
 #ready-to-roll {
-  filter: drop-shadow(0 2px 1rem rgba(0,0,0,0.8));
   left: 4rem;
+  top: 8rem;
   position: absolute;
-  top: 6rem;
-  width: 30rem;
+  box-sizing: border-box;
+  width: 100rem;
+  z-index: 1;
+}
+
+#ready-to-roll img {
+  filter: drop-shadow(0 2px 1rem rgba(0,0,0,0.8));
+  width: 36rem;
 }
 
 #jeep {
-  top: 10rem;
+  top: 8rem;
   left: 50%;
   max-width: 72rem;
   position: absolute;
   transform: translate(-50%, 0);
+  overflow-y: visible;
 }
 
 #viewer {
   box-sizing: border-box;
-  height: 42rem;
+  height: 60vw;
+  margin: 0 0 12rem 0;
   padding: 0 4rem;
   text-align: center;
   width: 100%;
   position: relative;
-  transition: height 800ms, padding 800ms;
+  transition: height 800ms, padding 800ms, width 800ms;
   z-index: 10;
 }
 
 #viewer.fullscreen {
   height: 100vh;
   padding: 0;
+  width: 100vw;
 }
 
 #container {
-  border-radius: 1rem;
+  border-radius: 0;
   border: 2rem solid white;
   box-shadow: 0 1rem 6rem 0 rgba(0,0,0,0.2);
   box-sizing: border-box;
+  cursor: -webkit-grab;
   height: 100%;
   overflow: hidden;
   position: relative;
   width: 100%;
   background-color: #D8D8D8;
-  transition: border-radius 800ms, border 800ms; 
+  transition: border-radius 800ms, border 800ms, background-color 500ms;
 }
 
 #container.fullscreen {
   border-radius: 0;
   border: 0px solid white;
+}
+#container.transparent {
   background-color: transparent;
 }
 
-#enterButton {
-  bottom: 0;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  background-image: linear-gradient(-180deg, #FAC928 0%, #EE6821 98%);
-  border-radius: 6rem;
-  border: 1px solid #5C5C5C;
-  box-shadow: inset 0 2px 2px 0 rgba(255,255,255,0.70), 0 1rem 1rem 0 rgba(0,0,0,0.15);
+#modelLoadingIndicator {
+  width: 8rem;
   height: 8rem;
+  /*border: 0.8rem dotted white;*/
+  /*border-radius: 100%;*/
+  background-image: url(../images/loading-indicator.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
   position: absolute;
-  width: 64rem;
-  max-width: 80%;
-  transition: bottom 800ms; 
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1, 1);
+  transition: opacity 200ms, visibility 200ms;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg);  }
+  100% { transform: translate(-50%, -50%) rotate(360deg);  }
+}
+
+#modelLoadingIndicator.hidden {
+  /*transform: translate(-50%, -50%) scale(0.1, 0.1);*/
+  opacity: 0;
+  visibility: hidden;
+}
+
+#enterButton {
+  align-items: center;
+  background-image: linear-gradient(-180deg, #FAC928 0%, #EE6821 98%);
+  border-radius: 6em;
+  border: 1px solid #5C5C5C;
+  bottom: 0;
+  box-shadow: inset 0 2px 2px 0 rgba(255,255,255,0.70), 0 1em 1em 0 rgba(0,0,0,0.15);
+  color: white;
+  display: flex;
+  font-size: 1rem;
+  justify-content: center;
+  left: 50%;
+  margin: 0;
+  padding: 0 1em;
+  position: absolute;
+  transform: translate(-50%, 50%);
+  transition: bottom 800ms, opacity 250ms, border 100ms;
+  white-space: nowrap;
+}
+
+#enterButton #enterLabel {
+  font-family: 'Roboto', sans-serif;
+  font-size: 3em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 2em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-transform: uppercase;
+}
+
+#enterButton #enterIcon {
+  background-image: url(../images/icon-fullscreen.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 2px 0.4em rgba(0,0,0,0.2));
+  height: 4em;
+  width: 4em;
+  margin: 1.2em 1em 1.2em 0;
+  float: right;
+  /*position: absolute;*/
+  /*margin: 0 2rem 0 0;*/
+  /*position: absolute;*/
+  /*right: 4rem;*/
+  /*top: 50%;*/
+  /*transform: translate(0 -50%;*/
 }
 
 #enterButton:hover {
   cursor: pointer;
+  border: 5px solid #2E84D1;
 }
 
 #enterButton.fullscreen {
-  bottom: -4rem;
+  bottom: -5rem;
+  opacity: 0;
 }
 
 #enterButton img {
@@ -175,12 +245,69 @@ header {
   background-color: rgba(20, 20, 20, 0.6);
 }
 
+#nextStepButton {
+  background-color: rgba(20, 20, 20, 0.4);
+  background-image: url(../images/icon-plus.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 40%;
+  border-radius: 100%;
+  bottom: 4rem;
+  height: 10rem;
+  right: 4rem;
+  position: absolute;
+  transition: opacity 800ms, visibility 800ms;
+  width: 10rem;
+  z-index: 1;
+}
+
+#nextStepButton:hover {
+  cursor: pointer;
+  background-color: rgba(20, 20, 20, 0.6);
+}
+
 .hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-.active {
+#blurb {
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1.25em;
+  margin: 4rem 4rem 4rem 4rem;
+  text-align: center;
+}
+
+#blurb a {
+  color: white;
+  text-decoration: none;
+  border-bottom: 1px solid white; 
+}
+
+#blurb div {
+  margin: auto;
+  text-align: left;
+  line-height: 1.5;
+}
+
+#blurb h1 {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.render {
+  margin: 0;
+  width: 100%;
+}
+
+.render img {
+  width: 100%;
+}
+
+/*.active {
   border: 4px solid pink;
   pointer-events: none;
   cursor: default;
@@ -198,4 +325,45 @@ header {
   transition: opacity 1s;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+*/
+
+@media (min-width: 800px) {
+ 
+  #ready-to-roll {
+    width: 100rem;
+    left: 50%;
+    top: 8rem;
+    position: absolute;
+    transform: translate(-50%, 0);
+    /*margin: 8rem 4rem 8rem 4rem;*/
+  }
+
+  #ready-to-roll img {
+    width: 50rem;
+  }
+
+  #jeep {
+    top: 0rem;
+    max-width: 96rem;
+  }
+
+  #blurb {
+    margin: 8rem 4rem 8rem 4rem;
+  }
+
+  #blurb div {
+    max-width: 100rem;
+    line-height: 1.5em;
+  } 
+
+  #enterButton {
+    font-size: 1.25rem;
+  }
+
+  #viewer {
+    padding: 0rem 16rem;
+    height: 40vw;
+  }
 }

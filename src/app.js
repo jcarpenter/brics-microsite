@@ -20,17 +20,16 @@ export default class App {
     this.container;
     // this.cssCamera;
     this.currentMode;
+    this.currentModelBuildStep = 0;
     this.deviceType;
-    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.grid;
     this.hemisphereLight;
-    this.LIGHTING_INTENSITY_FOR_AR = 1.8;
-    this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP = 1.3;
     this.model;
+    this.modelElements = [];
     this.orbitControls;
-    this.PERSP_CAMERA_FOV = 15;
-    this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
     this.perspCamera;
     this.render = this.render.bind(this);
+    this.shadow;
     this.scrollOffset;
     this.scrollTarget;
     this.viewer;
@@ -40,10 +39,19 @@ export default class App {
     this.vrDisplay;
     this.vrFrameData;
     
+    this.ENTER_EXIT_TRANSITION_DURATION = 800;
+    this.LIGHTING_INTENSITY_FOR_AR = 1.5;
+    this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP = 1.3;
+    this.MODEL_TIMING_MULTIPLIER = 1;
+    this.MODEL_NORMAL_SCALE = 0.01;
+    this.MODEL_SMALL_SCALE = 0.0025;
+    this.PERSP_CAMERA_FOV = 15;
+    this.PERSP_CAMERA_ISO_TARGET = new THREE.Vector3(0, 1, 0);
+
     // Global Draco decoder type.
-    this.dracoDecoderType = {};
-    this.dracoDecoderType.type = 'js';
-    this.dracoLoader = new THREE.DRACOLoader('js/third_party/draco/', this.dracoDecoderType);
+    // this.dracoDecoderType = {};
+    // this.dracoDecoderType.type = 'js';
+    // this.dracoLoader = new THREE.DRACOLoader('js/third_party/draco/', this.dracoDecoderType);
 
     // Check for AR displays
     THREE.ARUtils.getARDisplay().then(display => {
@@ -73,6 +81,7 @@ export default class App {
       // this.hideElement(document.querySelector("#enter-ar"));
     }
 
+    this.createEnterButton();
     this.createModel();
     this.createLights();
     // this.createEnvironments();
@@ -85,7 +94,6 @@ export default class App {
     // Create container elements
     this.container = document.querySelector("#container");
     this.viewer = document.querySelector("#viewer");
-    this.splash = document.querySelector("#splash");
     
     // Setup scene and renderers
     this.scene = new THREE.Scene();
@@ -116,15 +124,33 @@ export default class App {
     
     this.enterButton = document.querySelector('#enterButton');
     this.enterButton.addEventListener('click', () => this.enter());
-    
+
     this.exitButton = document.querySelector('#exitButton');
     this.exitButton.addEventListener('click', () => this.exit());
+
+    this.nextStepButton = document.querySelector('#nextStepButton');
+    this.nextStepButton.addEventListener('click', () => this.showNextModelPiece());
 
     // window.addEventListener('resize', e => this.onWindowResize(e), false);
     document.addEventListener('touchmove', e => this.onTouchMove(e), { passive: false });
     // bus.on('enterAR', () => this.enterAR());
     // bus.on('exitAR', () => this.exit());
 
+    // Setup keyboard convenience function (for testing only)
+    window.addEventListener('keydown', function(e){
+      if ((!e.metaKey) || (!e.metaKey)) {
+        switch (e.keyCode) {
+          case 49: { // 1
+            this.animateInFullModel();
+            break;
+          }
+          case 50: { // 2
+            this.showNextModelPiece();
+            break;
+          }
+        }
+      }
+    }.bind(this));
   }
 
   setDeviceType(type) {
@@ -140,6 +166,11 @@ export default class App {
     // Taken from https://coderwall.com/p/i817wa/one-line-function-to-detect-mobile-devices-with-javascript
     return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
   };
+
+  hideModelLoadingIndicator() {
+    this.loadingIndicator = document.querySelector("#modelLoadingIndicator");
+    this.loadingIndicator.classList.add('hidden');
+  }
 
   hideElement(element) {
     element.classList.add("hidden");
@@ -176,6 +207,25 @@ export default class App {
       .start();
   }
 
+  createEnterButton() {
+
+    let label = document.querySelector('#enterLabel');
+    let icon = document.querySelector('#enterIcon');
+    
+    if (this.deviceType == 'ar') {
+      label.innerHTML = 'Build in AR';
+      icon.style.backgroundImage = 'url(../images/icon-ar.svg)'
+    }
+    else if (this.deviceType == 'mobile') {
+      label.innerHTML = 'Build it now';
+      icon.style.backgroundImage = 'url(../images/icon-fullscreen.svg)'
+    }
+    else if (this.deviceType == 'desktop') {
+      label.innerHTML = 'Build it now';
+      icon.style.backgroundImage = 'url(../images/icon-fullscreen.svg)'
+    }
+  }
+
   createArCameras() {
       
     this.vrFrameData = new VRFrameData();
@@ -189,7 +239,7 @@ export default class App {
     );
 
     this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV - 5, window.innerWidth / window.innerHeight, this.vrDisplay.depthNear, this.vrDisplay.depthFar);
-    this.perspCamera.position.set(12, 12, 12);
+    this.perspCamera.position.set(12, 12, -12);
     this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
 
     window.addEventListener('resize', () => {
@@ -215,7 +265,7 @@ export default class App {
   createMobileCamera() {
 
     this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV, this.getContainerSize().width / this.getContainerSize().height, 0.1, 100);
-    this.perspCamera.position.set(12, 12, 12);
+    this.perspCamera.position.set(12, 12, -12);
     this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
 
     window.addEventListener('resize', () => {
@@ -226,7 +276,7 @@ export default class App {
   createDesktopCamera(){
 
     this.perspCamera = new THREE.PerspectiveCamera(this.PERSP_CAMERA_FOV, this.getContainerSize().width / this.getContainerSize().height, 0.1, 100);
-    this.perspCamera.position.set(12, 12, 12);
+    this.perspCamera.position.set(12, 12, -12);
     this.orbitControls = new THREE.OrbitControls( this.perspCamera, this.rendererGL.renderer.domElement );
     // Enable animation loop when using damping or autorotation
     this.orbitControls.autoRotate = true;
@@ -240,7 +290,6 @@ export default class App {
     this.orbitControls.minPolarAngle = 0; // radians
     this.orbitControls.maxPolarAngle = Math.PI / 2; // radians
     this.perspCamera.lookAt(this.PERSP_CAMERA_ISO_TARGET);
-    this.container.style.cursor = '-webkit-grab';
 
     window.addEventListener('resize', () => {
       this.updateCameraAndCanvas(0);
@@ -250,52 +299,49 @@ export default class App {
   createModel() {
     
     /*
-    this.dracoLoader.load( 'models/sphere.drc', geometry => {
+      this.dracoLoader.load( 'models/sphere.drc', geometry => {
 
-      let mtlLoader = new THREE.MTLLoader();
-      mtlLoader.load('models/sphere.mtl', materials => {
+        let mtlLoader = new THREE.MTLLoader();
+        mtlLoader.load('models/sphere.mtl', materials => {
 
-        console.log("Test");
-        materials.preload();
-        // console.log(materials);
-        let mat = materials.materials.test;
-        console.log(mat);
-        // // this.loadModel(mat);
+          console.log("Test");
+          materials.preload();
+          // console.log(materials);
+          let mat = materials.materials.test;
+          console.log(mat);
+          // // this.loadModel(mat);
 
-        this.createGrid();
-        geometry.computeVertexNormals();
+          this.createGrid();
+          geometry.computeVertexNormals();
 
-        let material = new THREE.MeshNormalMaterial();
-        let mesh = new THREE.Mesh( geometry, mat );
-        mesh.geometry.applyMatrix( new THREE.Matrix4().makeScale(0.0001, 0.0001, 0.0001) );
-        // mesh.castShadow = true;
-        // mesh.receiveShadow = true;
-        
-        mesh.traverse(node => {
-          if( node.material ) {
-            node.material.side = THREE.DoubleSide;
-          }
-        })
+          let material = new THREE.MeshNormalMaterial();
+          let mesh = new THREE.Mesh( geometry, mat );
+          mesh.geometry.applyMatrix( new THREE.Matrix4().makeScale(0.0001, 0.0001, 0.0001) );
+          // mesh.castShadow = true;
+          // mesh.receiveShadow = true;
+          
+          mesh.traverse(node => {
+            if( node.material ) {
+              node.material.side = THREE.DoubleSide;
+            }
+          })
 
-        console.log(mesh);
+          console.log(mesh);
 
-        this.model = mesh;
-        this.scene.add( this.model );
-        // this.model.scale.set(0.1, 0.1, 0.1);
+          this.model = mesh;
+          this.scene.add( this.model );
+          // this.model.scale.set(0.1, 0.1, 0.1);
 
+        });
       });
-    });
     */
 
     this.loadingManager = new THREE.LoadingManager();
     this.loader = new THREE.ColladaLoader( this.loadingManager );
     this.loader.load('models/jeep.dae', function(collada){
 
-      this.createGrid();
-
-      // Set all materials to DoubleSide, to compensate for flipped normals in the original model
+      // Set all materials to DoubleSide, to compensate for mis-aligned normals in the original model
       collada.scene.traverse( function( node ) {
-        // console.log(node.name);
         if( node.material ) {
           node.material.side = THREE.DoubleSide;
         }
@@ -303,12 +349,30 @@ export default class App {
 
       this.model = collada.scene;
       this.scene.add(this.model)
-      let wheels_left = this.model.getObjectByName("wheels-right");
-      wheels_left.position.set(0, 0, 200);
-      new TWEEN.Tween(this.model.getObjectByName("wheels-right").position)
-      .to({z: 0 }, 1000)
-      .easing(TWEEN.Easing.Quadratic.Out)
-      .start()
+      
+      // Create grid and drop shadow
+      this.createGrid();
+      this.createShadow();
+
+      // Create variables for the pieces
+      this.wheels_left = this.model.getObjectByName("wheels-left");
+      this.wheels_right = this.model.getObjectByName("wheels-right");
+      this.engine = this.model.getObjectByName("engine");
+      this.storage = this.model.getObjectByName("storage");
+      this.seats = this.model.getObjectByName("seats");
+      this.grill = this.model.getObjectByName("grill");
+      this.roof = this.model.getObjectByName("roof");
+      this.axles = this.model.getObjectByName("axles");
+      this.base = this.model.getObjectByName("base");
+      this.mirrors = this.model.getObjectByName("mirrors");
+      this.doors = this.model.getObjectByName("doors");
+      this.modelElements.push(this.shadow, this.wheels_left, this.wheels_right, this.engine, this.storage, this.seats, this.grill, this.roof, this.axles, this.base, this.mirrors, this.doors);
+
+      // Call build model once scene is ready
+      this.animateInFullModel();
+
+      // Hide the model loading indicator
+      this.hideModelLoadingIndicator();
 
       // Fire pageLoad once model is ready
       // bus.emit('pageLoad');
@@ -329,22 +393,36 @@ export default class App {
     this.scene.add(this.grid);
   }
 
-  createEnvironments() {
-    this.environments = new Environments(this.scene);
+  createShadow() {
+    
+    this.shadow = new THREE.Mesh(
+      new THREE.PlaneBufferGeometry(260, 360),
+      new THREE.MeshBasicMaterial({
+        map: new THREE.TextureLoader().load('../images/jeep-shadow.png'),
+        side: THREE.DoubleSide,
+        opacity: 1,
+        transparent: true,
+      })
+    );
+    this.shadow.translateY(4);
+    this.shadow.rotateX(90 * THREE.Math.DEG2RAD)
+    this.model.add(this.shadow)
   }
 
   showModel() {
-    // new TWEEN.Tween(this.model.material)
-    //   .to({ opacity: 1 }, 1000)
-    //   .start();
     this.model.visible = true;
   }
 
   hideModel() {
-    // new TWEEN.Tween(this.model.material)
-    //   .to({ opacity: 0 }, 1000)
-    //   .start();
     this.model.visible = false;
+  }
+
+  showGrid() {
+    this.grid.visible = true;
+  }
+
+  hideGrid() {
+    this.grid.visible = false;
   }
 
   enter() {
@@ -363,23 +441,250 @@ export default class App {
     }
   }
 
+  showShadow (delay = 0) {
+    let element = this.shadow;
+    element.material.opacity = 0;
+    new TWEEN.Tween(element.material)
+      .to({opacity: 1}, 500)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showWheelsLeft (delay = 0) {
+    let element = this.wheels_left;
+    element.position.set(-0, 0, -75);
+    new TWEEN.Tween(element.position)
+      .to({z: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showWheelsRight (delay = 0) {
+    let element = this.wheels_right;
+    element.position.set(0, 0, 75);
+    new TWEEN.Tween(element.position)
+      .to({z: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showEngine (delay = 0) {
+    let element = this.engine;
+    element.position.set(0, 150, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showStorage (delay = 0) {
+    let element = this.storage;
+    element.position.set(0, 150, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showSeats (delay = 0) {
+    let element = this.seats;
+    element.position.set(0, 100, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showGrill (delay = 0) {
+    let element = this.grill;
+    element.position.set(100, 0, 0);
+    new TWEEN.Tween(element.position)
+      .to({x: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showRoof (delay = 0) {
+    let element = this.roof;
+    element.position.set(0, 150, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showAxles (delay = 0) {
+    let element = this.axles;
+    element.position.set(0, 100, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 500)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Bounce.Out)
+      .start();
+  }
+
+  showBase (delay = 0) {
+    let element = this.base;
+    element.position.set(0, 100, 0);
+    new TWEEN.Tween(element.position)
+      .to({y: 0}, 500)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Bounce.Out)
+      .start();
+  }
+
+  showMirrors (delay = 0) {
+    let element = this.mirrors;
+    element.position.set(-25, 0, 0);
+    new TWEEN.Tween(element.position)
+      .to({x: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  showDoors (delay = 0) {
+    let element = this.doors;
+    element.position.set(-25, 0, 0);
+    new TWEEN.Tween(element.position)
+      .to({x: 0}, 800)
+      .onStart(() => element.visible = true)
+      .delay(delay * this.MODEL_TIMING_MULTIPLIER)
+      .easing(TWEEN.Easing.Quintic.Out)
+      .start();
+  }
+
+  hideAllModelPieces() {
+    for (var i = 0; i < this.modelElements.length; i++) {
+      this.modelElements[i].visible = false;
+    }
+  }
+
+  showAllModelPieces() {
+    for (var i = 0; i < this.modelElements.length; i++) {
+      this.modelElements[i].visible = true;
+      this.modelElements[i].position.set(0, 0, 0);
+    }
+  }
+
+  dropModelIntoARMode() {
+    this.showModel();
+
+    // Reza's code for getting the rotation right
+    let x = this.arCamera.position.x - this.model.position.x;
+    let z = this.arCamera.position.z - this.model.position.z;
+    let angle = Math.atan2(x, z);
+    this.model.rotation.set(0, angle + 110 * THREE.Math.DEG2RAD, 0);
+    this.model.updateMatrixWorld(true);
+
+    this.currentModelBuildStep = 0;
+    this.showNextModelPiece();
+  }
+
+  animateInFullModel() {
+    
+    // Start by hiding all the pieces
+    this.hideAllModelPieces();
+
+    //Animate in the individual pieces. Pass in delay argument to stagger as desired 
+    this.showShadow(50);
+    this.showBase(50);
+    this.showAxles(50);
+    this.showWheelsLeft(50);
+    this.showWheelsRight(50);
+
+    this.showEngine(600);
+    this.showStorage(800);
+    this.showSeats(800);
+    this.showGrill(1000);
+
+    this.showRoof(1250);
+
+    this.showMirrors(1550);
+    this.showDoors(1550);1
+  }
+
+  showNextModelPiece() {
+
+    switch(this.currentModelBuildStep) {
+      case 0: {
+        this.hideAllModelPieces();
+        this.showShadow();
+        this.showBase();
+        this.showAxles();
+        this.showWheelsLeft();
+        this.showWheelsRight();
+        this.currentModelBuildStep++
+        break;
+      }
+      case 1: {
+        this.showEngine();
+        this.showStorage();
+        this.showSeats();
+        this.currentModelBuildStep++
+        break;
+      }
+      case 2: {
+        this.showGrill();
+        this.showRoof();
+        this.currentModelBuildStep++
+        break;
+      }
+      case 3: {
+        this.showMirrors();
+        this.showDoors();
+        this.currentModelBuildStep = 0;
+        break;
+      }
+    }
+
+  }
+
+  createViewerPlaceholder() {
+
+    this.viewerPlaceholder = document.createElement('div');
+    this.viewerPlaceholder.id = 'placeholder';
+    this.viewerPlaceholder.style.width = window.getComputedStyle(this.viewer).getPropertyValue('width');
+    this.viewerPlaceholder.style.height = window.getComputedStyle(this.viewer).getPropertyValue('height');
+    this.viewerPlaceholder.style.margin = window.getComputedStyle(this.viewer).getPropertyValue('margin');
+    this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
+    this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
+    this.viewer.parentElement.insertBefore( this.viewerPlaceholder, this.viewer );
+
+  }
+
+
   enterFullscreen() {
 
     this.exitButton.classList.remove("hidden");
+    this.nextStepButton.classList.remove("hidden");
     this.currentMode = 'fullscreen';
 
     // We store this for later
     this.viewerOffsetFromTop = this.viewer.getBoundingClientRect().top + window.scrollY;
 
     // Create placeholder element. This will keep page from reflowing when we "pop out" the viewer by setting it's position to absolute
-    this.viewerPlaceholder = document.createElement('div');
-    this.viewerPlaceholder.id = 'placeholder';
-    this.viewerPlaceholder.style.width = window.getComputedStyle(this.viewer).getPropertyValue('width');
-    this.viewerPlaceholder.style.height = window.getComputedStyle(this.viewer).getPropertyValue('height');
-    this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
-    this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
-    this.viewer.parentElement.insertBefore( this.viewerPlaceholder, this.viewer );
- 
+    this.createViewerPlaceholder();
+
     // Prevent page scrolling by setting overflow and hidden values on documentElement
     document.documentElement.style.overflowY = 'hidden';
     document.documentElement.style.height = '100vh';
@@ -401,6 +706,8 @@ export default class App {
 
     transition.addEventListener('finish', function() {
       this.viewer.style.top = String(window.scrollY + 'px');
+      this.currentModelBuildStep = 0;
+      this.showNextModelPiece();
     }.bind(this));
 
     // The following classes animate the viewport and other elements into position
@@ -413,6 +720,7 @@ export default class App {
   exitFullscreen() {
 
     this.exitButton.classList.add("hidden");
+    this.nextStepButton.classList.add("hidden");
     this.currentMode = '2d';
 
     // Re-enable page scrolling by removing height and overflow styles on document.documenElement
@@ -440,27 +748,20 @@ export default class App {
       this.viewerPlaceholder.remove();
       this.viewer.style.position = 'relative';
       this.viewer.style.top = 0;
-      // this.viewer.removeAttribute('style');
+      this.showAllModelPieces();
     }.bind(this));
   }
 
   enterAR() {
 
     this.exitButton.classList.remove("hidden");
+    this.nextStepButton.classList.remove("hidden");
 
     // We store this for later
     this.viewerOffsetFromTop = this.viewer.getBoundingClientRect().top + window.scrollY;
 
     // Create placeholder element. This will keep page from reflowing when we "pop out" the viewer by setting it's position to absolute
-    this.viewerPlaceholder = document.createElement('div');
-    this.viewerPlaceholder.id = 'placeholder';
-    this.viewerPlaceholder.style.width = window.getComputedStyle(this.viewer).getPropertyValue('width');
-    this.viewerPlaceholder.style.height = window.getComputedStyle(this.viewer).getPropertyValue('height');
-    this.viewerPlaceholder.style.padding = window.getComputedStyle(this.viewer).getPropertyValue('padding');
-    this.viewerPlaceholder.style.boxSizing = window.getComputedStyle(this.viewer).getPropertyValue('box-sizing');
-    this.viewer.parentElement.insertBefore( this.viewerPlaceholder, this.viewer );
-
-
+    this.createViewerPlaceholder();
  
     // Prevent page scrolling by setting overflow and hidden values on documentElement
     document.documentElement.style.overflowY = 'hidden';
@@ -470,8 +771,18 @@ export default class App {
     // The key is setting "top" value to equal the viewer's Y position relative to viewport top, then setting position absolute.
     this.viewer.style.position = 'absolute';
 
+    // Hide model and elements before starting transition
+    this.hideGrid();
+    this.hideModel();
+    this.model.scale.set(this.MODEL_SMALL_SCALE, this.MODEL_SMALL_SCALE, this.MODEL_SMALL_SCALE);
+
     // Tweens the canvas and camera aspect ratio to match the new container size
     this.updateCameraAndCanvas();
+
+    // new TWEEN.Tween(this.model.scale)
+    //   .to({x: this.MODEL_SMALL_SCALE, y: this.MODEL_SMALL_SCALE, z: this.MODEL_SMALL_SCALE}, 800)
+    //   .start()
+    // this.model.scale.set(this.MODEL_SMALL_SCALE, this.MODEL_SMALL_SCALE, this.MODEL_SMALL_SCALE);
 
     let transition = this.viewer.animate([
       {top: String(this.viewerOffsetFromTop + 'px')},
@@ -482,17 +793,16 @@ export default class App {
     });
 
     transition.addEventListener('finish', function() {
+      this.currentModelBuildStep = 0;
       this.viewer.style.top = String(window.scrollY + 'px');
       this.currentMode = 'ar';
-      this.hideModel();
       this.scene.add(this.reticle);
       this.setActiveCamera(this.arCamera);
-      this.grid.visible = false;
       this.hemisphereLight.intensity = this.LIGHTING_INTENSITY_FOR_AR;
+      this.container.classList.add("transparent");
     }.bind(this));
 
     // The following classes animate the viewport and other elements into position
-    this.splash.classList.add('fullscreen');
     this.viewer.classList.add('fullscreen');
     this.container.classList.add('fullscreen');
     this.enterButton.classList.add('fullscreen');
@@ -502,6 +812,7 @@ export default class App {
   exitAR() {
 
     this.exitButton.classList.add("hidden");
+    this.nextStepButton.classList.add("hidden");
     this.currentMode = '2d';
 
     // Re-enable page scrolling by removing height and overflow styles on document.documenElement
@@ -510,13 +821,21 @@ export default class App {
     let viewerCurrentPosition = window.getComputedStyle(this.viewer).getPropertyValue('top');
 
     // Remove the following classes to animate the viewport and other elements back to their standard positions
-    this.splash.classList.remove('fullscreen');
     this.viewer.classList.remove('fullscreen');
     this.container.classList.remove('fullscreen');
     this.enterButton.classList.remove('fullscreen');
 
     // Tween the canvas and camera aspect ratio to match the new container size
     this.updateCameraAndCanvas();
+
+    // Reset model position and scale, reset lighting intensity, and show grid.
+    this.model.position.set(0, 0, 0);
+    this.model.rotation.set(0, 0, 0);
+    this.model.scale.set(this.MODEL_NORMAL_SCALE, this.MODEL_NORMAL_SCALE, this.MODEL_NORMAL_SCALE);
+    this.hemisphereLight.intensity = this.LIGHTING_INTENSITY_FOR_MOBILE_AND_DESKTOP;
+    this.showGrid();
+    this.container.classList.remove("transparent");
+    this.scene.remove(this.reticle);
 
     let transition = this.viewer.animate([
       {top: viewerCurrentPosition},
@@ -527,14 +846,14 @@ export default class App {
     });
 
     transition.addEventListener('finish', function() {
+      this.setActiveCamera(this.perspCamera);
       this.viewerPlaceholder.remove();
       this.viewer.style.position = 'relative';
       this.viewer.style.top = 0;
+      this.showModel();
+      this.animateInFullModel();
+      // this.showAllModelPieces();
     }.bind(this));
-
-    this.setActiveCamera(this.perspCamera);
-    this.showModel();
-    this.scene.remove(this.reticle);
 
     // this.animatePerspCameraPosition({ x: 0, y: 1, z: 0 }, this.group.position);
     // this.animatePerspCameraFov(this.PERSP_CAMERA_FOV);
@@ -566,10 +885,10 @@ export default class App {
       const hits = this.vrDisplay.hitTest(0.5, 0.5);
       if (hits && hits.length) {
         const hit = hits[0];
-        THREE.ARUtils.placeObjectAtHit(this.scene, hit, true, 1);
-        // Show model immediately if not already present
-        // this.model.material.opacity = 1;
-        this.showModel();
+        if (this.currentModelBuildStep == 0) {
+          THREE.ARUtils.placeObjectAtHit(this.model, hit, 1, false);
+          this.dropModelIntoARMode();
+        }
       }
     }
   }
@@ -594,6 +913,7 @@ export default class App {
         this.arView.render();
         this.reticle.update();
         this.vrControls.update(); // Updates perspective camera's positioning
+        // this.model.rotation.y += 0.01;
       }
       
       // Update camera projection matrix in case near/far planes have changed

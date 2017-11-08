@@ -42,17 +42,38 @@
   </header>
 
   <section id="splash">
-    <img id="ready-to-roll" src="images/ready-to-roll.png">
+    <div id="ready-to-roll">
+      <img src="images/ready-to-roll.png">
+    </div>
     <img id="jeep" src="images/jeep.png">
   </section>
 
   <section id="viewer">
     <div id="container">
       <div id="exitButton" class="hidden"></div>
+      <div id="nextStepButton" class="hidden"></div>
     </div>
+    <div id="modelLoadingIndicator"></div>
     <button id="enterButton">
-      <img src="images/build-at-home.png">
+      <span id="enterLabel">Build in AR</span>
+      <div id="enterIcon">
     </button>
+  </section>
+
+  <section id="blurb">
+    <div>
+      <h1>Explore BRIC City</h1>
+      <p>Roll out with the BRIC City Jeep. Lipsum consectetur <a href="">adipiscing</a> elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud <a href="">exercitation</a> ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </div>
+  </section>
+
+  <img class="render" src="images/blurb-render-1.jpg">
+
+  <section id="blurb">
+    <div>
+      <h1>Collect the whole set</h1>
+      <p>Lipsum consectetur elit, sed do eiusmod tempor incididunt ut labore et <a href="">adipiscing</a> magna aliqua. Ut enim ad minim veniam, quis nostrud ullamco laboris nisi ut aliquip ex ea commodo consequat. <a href="">Excepteur</a> sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </div>
   </section>
 
   <!-- <footer class="footer">
@@ -73,8 +94,8 @@
   <script src="js/third_party/ColladaLoader.js"></script>
   <!-- <script src="js/third_party/GLTF2Loader.js"></script> -->
   <!-- <script src="js/third_party/CSS3DRenderer.js"></script> -->
-  <script src="js/third_party/draco/DRACOLoader.js"></script>
-  <script src="js/third_party/draco/geometry_helper.js"></script>
+  <!-- <script src="js/third_party/draco/DRACOLoader.js"></script> -->
+  <!-- <script src="js/third_party/draco/geometry_helper.js"></script> -->
   <script src="js/bundle.js"></script>
 </body>
 </html>
