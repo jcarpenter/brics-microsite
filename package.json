@@ -1,10 +1,10 @@
 {
-  "name": "shopping-concept",
+  "name": "brics-microsite",
   "version": "1.0.0",
-  "description": "A concept for a WebAR shopping experience",
+  "description": "A concept for a responsive WebAR microsite",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jcarpenter/shopping-concept.git"
+    "url": "https://github.com/jcarpenter/brics-microsite.git"
   },
   "main": "index.js",
   "scripts": {
@@ -22,9 +22,9 @@
     "webpack-dev-server": "^2.8.2"
   },
   "bugs": {
-    "url": "https://github.com/jcarpenter/shopping-concept/issues"
+    "url": "https://github.com/jcarpenter/brics-microsite/issues"
   },
-  "homepage": "https://github.com/jcarpenter/shopping-concept#readme",
+  "homepage": "https://github.com/jcarpenter/brics-microsite#readme",
   "keywords": [
     "WebAR"
   ],
